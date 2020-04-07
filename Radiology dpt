@@ -131,7 +131,7 @@ def init():  # Initialisation function
 
     global nr_servers
     nr_servers = {}  # Input number of servers per workstation
-    nr_servers[0] = 3
+    nr_servers[0] = 3   # let op, "station 1" is hier nr_servers[0]
     nr_servers[1] = 2
     nr_servers[2] = 4
     nr_servers[3] = 3
@@ -148,7 +148,7 @@ def init():  # Initialisation function
 
     global route
     route = defaultdict(dict)  # Route to follow for each job type
-    route[0][0] = 2  # JOB = 1
+    route[0][0] = 2  # JOB = 1 (3,1,2,5), altijd -1
     route[0][1] = 0
     route[0][2] = 1
     route[0][3] = 4
@@ -357,6 +357,8 @@ def init():  # Initialisation function
     initialize_functions()
 
     ### INITIALISE SYSTEM ###
+
+    #init()?
 
     ### DETERMINE FIRST ARRIVAL AND FIRST DEPARTURE ###
     # TO DO STUDENT    # Put all departure times for all customers to +infty
