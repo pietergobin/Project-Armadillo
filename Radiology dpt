@@ -358,7 +358,7 @@ def init():  # Initialisation function
 
     ### INITIALISE SYSTEM ###
 
-    #init()?
+    #init()???
 
     ### DETERMINE FIRST ARRIVAL AND FIRST DEPARTURE ###
     # TO DO STUDENT    # Put all departure times for all customers to +infty
