@@ -2,9 +2,9 @@
 authors:
 '''
 
-import pandas as pd
-import numpy as np
 import math
+import numpy as np
+import pandas as pd
 
 #define global variables
 event_queue = pd.DataFrame({"job ID", "time"})
@@ -21,10 +21,22 @@ class Job:
         self.arrival_time = clock
         self.location
         if patient:
-            #define type
+            r = np.random.uniform(0, 1)
+            if 0<r<=0.2:
+                self.type = 1
+            elif 0.2<r<=0.4:
+                self.type = 2
+            elif 0.4<r<=0.5:
+                self.type = 3
+            else:
+                self.type = 4
         else:
-            #define type
-
+            r = np.random.uniform(0, 1)
+            if 0<r<=0.4:
+                self.type = 2
+            else:
+                self.type = 4
+        self.route
 
 class Station:
     def _init_(self, servers):
