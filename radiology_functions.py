@@ -56,5 +56,6 @@ def Normal_distribution(mean, stdev):
 
 def arrival():
 
+
 def departure():
 
