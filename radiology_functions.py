@@ -8,18 +8,19 @@ import pandas as pd
 
 #define global variables
 event_queue = pd.DataFrame({"job ID", "time"})
-
+counter = 0
+routes = {1:(3,1,2,5),2:(4,1,3),3:(2,5,1,4,3), 4:(2,4,5)}
 
 #define classes
 class Job:
-    global counter
 
-    def _init_(self, patient, clock):
+    def __init__(self, patient, clock):
+        global counter
         counter += 1
         self.ID = counter
-        self.departure_time = 0
+        self.departure_time = float("inf")
         self.arrival_time = clock
-        self.location
+        self.location = None
         if patient:
             r = np.random.uniform(0, 1)
             if 0<r<=0.2:
@@ -36,7 +37,8 @@ class Job:
                 self.type = 2
             else:
                 self.type = 4
-        self.route
+        self.route = routes.get(self.type)
+
 
 class Station:
     def _init_(self, servers):
@@ -67,7 +69,7 @@ def Normal_distribution(mean, stdev):
     return x
 
 def arrival():
-
+    nada = 0
 
 def departure():
-
+    nikske = 0
