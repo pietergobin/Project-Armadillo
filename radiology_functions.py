@@ -35,6 +35,7 @@ class Job:
         self.ID = counter
         self.departure_time = float("inf")
         self.arrival_time = float(clock)
+        self.process_time = 0
         self.location = None
         if patient:
             r = np.random.uniform(0, 1)
