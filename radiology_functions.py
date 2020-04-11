@@ -2,8 +2,36 @@
 authors:
 '''
 
+import pandas as pd
 import numpy as np
 import math
+
+#define global variables
+event_queue = pd.DataFrame({"job ID", "time"})
+
+
+#define classes
+class Job:
+    global counter
+
+    def _init_(self, patient, clock):
+        counter += 1
+        self.ID = counter
+        self.departure_time = 0
+        self.arrival_time = clock
+        self.location
+        if patient:
+            #define type
+        else:
+            #define type
+
+
+class Station:
+    def _init_(self, servers):
+        self.queue = list()
+        self.servers = servers
+        self.servers_busy = 0
+
 
 
 def Exponential_distribution(lambdaValue):
