@@ -7,7 +7,8 @@ import numpy as np
 import pandas as pd
 
 #define global variables
-event_queue = pd.DataFrame({"job ID", "time"})
+event_queue = pd.DataFrame({"job ID":[], "time":[]})
+print(event_queue)
 counter = 0
 routes = {1:(3,1,2,5),2:(4,1,3),3:(2,5,1,4,3), 4:(2,4,5)}
 
@@ -97,7 +98,8 @@ class Station:
         self.id = id
         self.servers = pd.DataFrame(columns=["busy_time","current_job"])
         for server in number_of_servers:
-            self.servers.append({"busy_time":None,"current_job":None})
+            servers = self.servers
+            servers.append({"busy_time":None,"current_job":None})
         self.queue = list() #contains the jobs who are in queue
 
 
@@ -109,9 +111,8 @@ class Station:
         sigma = math.sqrt(distr[1])
         process_time = Normal_distribution(mu, sigma)
         job.process_time += process_time
-
-
-
+        self.servers.loc[self.servers.current_job == job.id, "busy_time"] += process_time
+        event_queue = event_queue.append()
 
 
 
