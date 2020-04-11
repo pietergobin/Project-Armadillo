@@ -81,12 +81,12 @@ class Job:
 
 
 class Station:
-    def _init_(self, number_of_servers, id):
+    def __init__(self, number_of_servers, id):
         self.id = id
         self.servers = pd.DataFrame(columns=["busy_time", "current_job"])
         for server in number_of_servers:
             servers = self.servers
-            servers.append({"busy_time": None, "current_job": None})
+            servers.append({"busy_time": 0, "current_job": None})
         self.queue = list()  # contains the jobs who are in queue
 
     def update_departure_time(self, job):
@@ -131,16 +131,23 @@ def normal_distributions(mean, stdev):
 # DEFINE METHODS FOR PROGRAM FLOW
 
 
-def generate_next_arrivals():
+def generate_next_arrivals(patient):
     global clock, event_queue
-    t_a1 = clock + exponential_distribution(0.25 * 60)
-    t_a2 = clock + exponential_distribution(1 * 60)
-    newjob1 = Job(True, t_a1)
-    newjob2 = Job(False, t_a2)
-    event_queue = event_queue.append({"job ID": [newjob1.id,newjob2.id], "time": [newjob1.arrival_time, newjob2.arrival_time], "type": ['arrival', 'arrival']})
+    if patient:
+        t_a = clock + exponential_distribution(0.25) * 60
+        newjob = Job(True, t_a)
+    else:
+        t_a = clock + exponential_distribution(1) * 60
+        newjob = Job(False, t_a)
+    event_queue = event_queue.append(
+            {"job ID": newjob.id, "time": newjob.arrival_time,
+            "type": 'arrival'})
+
 
 def get_next_event():
-    None
+    global event_queue
+    return event_queue[0]
+
 
 def arrival():
     nada = None
