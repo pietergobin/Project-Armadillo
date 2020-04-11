@@ -3,14 +3,8 @@ authors: '''
 import radiology_functions as f
 
 
+#initialise objects
+f.clock = 0
 
-
-
-def simulation(foo1, foo2):
-    clock = 0
-    simulation_time = 11
-
-    while clock < simulation_time:
-        f.arrival()
 
 

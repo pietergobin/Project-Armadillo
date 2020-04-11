@@ -104,6 +104,7 @@ class Station:
 
 
     def Update_Departure_Time(self, job):
+        global event_queue
         current_station = str(self.id)
         job_type = job.type
         distr = Processing_Times_Prob[current_station].values(job_type - 1)
