@@ -18,9 +18,9 @@ Processing_Times_Prob = pd.DataFrame({"Job_Type": [1, 2, 3, 4], "1": [[12, 2], [
                                          , "4": [[0, 0], [20, 3], [24, 4], [13, 2]]
                                          , "5": [[25, 5], [0, 0], [20, 3], [25, 5]]})
 
-Effiency_Improvement = pd.DataFrame({"Job_Type": [1, 2, 3, 4], "Current": [[25, 5], [0, 0], [20, 3], [25, 5]]
-                                        , "Upgrade": [[20, 5], [0, 0], [20, 3], [20, 5]]
-                                        , "New_System": [[17, 4], [0, 0], [15, 3], [16, 4]]})
+Efficiency_Improvement = pd.DataFrame({"Job_Type": [1, 2, 3, 4], "Current": [[25, 5], [0, 0], [20, 3], [25, 5]]
+                                          , "Upgrade": [[20, 5], [0, 0], [20, 3], [20, 5]]
+                                          , "New_System": [[17, 4], [0, 0], [15, 3], [16, 4]]})
 
 
 # DEFINE CLASSES
@@ -86,7 +86,7 @@ class Station:
         self.servers = pd.DataFrame(columns=["busy_time", "current_job"])
         for server in number_of_servers:
             servers = self.servers
-            servers.append({"busy_time": 0, "current_job": None})
+            servers.append({"busy_time": 0, "current_job": None}, ignore_index=True)
         self.queue = list()  # contains the jobs who are in queue
 
     def update_departure_time(self, job):
@@ -100,7 +100,8 @@ class Station:
         job.process_time += process_time
         self.servers.loc[self.servers.current_job == job.id, "busy_time"] += process_time
         departure_time = process_time + clock
-        event_queue = event_queue.append({"job ID": job.id, "time": departure_time, "type": 'departure'})
+        event_queue = event_queue.append({"job ID": job.id, "time": departure_time, "type": 'departure'},
+                                         ignore_index=True)
 
 
 # DEFINE DISTRIBUTIONS
@@ -131,17 +132,26 @@ def normal_distributions(mean, stdev):
 # DEFINE METHODS FOR PROGRAM FLOW
 
 
-def generate_next_arrivals(patient):
+def generate_arrival(patient):
     global clock, event_queue
-    if patient:
-        t_a = clock + exponential_distribution(0.25) * 60
+    if event_queue.empty:  # generate first arrivals
+        t_a1 = clock + exponential_distribution(1 / 0.25) * 60  # interarrival rate = 0.25; arrival rate = 1/0.25 = 4
+        t_a2 = clock + exponential_distribution(1) * 60  # interarrival rate = 1; arrival rate = 1/1 = 1
+        newjob1 = Job(True, t_a1)
+        newjob2 = Job(False, t_a2)
+        add = pd.DataFrame({"job ID": [newjob1.id, newjob2.id], "time": [newjob1.arrival_time, newjob2.arrival_time],
+                            "type": ['arrival', 'arrival']})
+        event_queue = event_queue.append(add, ignore_index=True)
+        return
+    elif patient:  # generate new patient arrival
+        t_a = clock + exponential_distribution(1 / 0.25) * 60
         newjob = Job(True, t_a)
-    else:
+    else:  # generate other arrival
         t_a = clock + exponential_distribution(1) * 60
         newjob = Job(False, t_a)
     event_queue = event_queue.append(
-            {"job ID": newjob.id, "time": newjob.arrival_time,
-            "type": 'arrival'})
+        {"job ID": newjob.id, "time": newjob.arrival_time,
+         "type": 'arrival'}, ignore_index=True)
 
 
 def get_next_event():
@@ -149,8 +159,10 @@ def get_next_event():
     return event_queue[0]
 
 
-def arrival():
-    nada = None
+def update_clock():
+    global event_queue, clock
+    event_queue = event_queue.sort_values(by=["time"], ignore_index=True)
+    clock = event_queue.loc[0, "time"]
 
 
 def departure():
