@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 
 # define global variables
-event_queue = pd.DataFrame({"job ID", "time"})
+event_queue = pd.DataFrame({"job ID":[], "time":[]})
 counter = 0
 routes = {1: (3, 1, 2, 5), 2: (4, 1, 3), 3: (2, 5, 1, 4, 3), 4: (2, 4, 5)}
 Processing_Times_Prob = pd.DataFrame({"Job_Type": [1, 2, 3, 4], "Distribution_WS1": [[12, 2], [15, 2], [15, 3], [0, 0]]
@@ -97,10 +97,8 @@ def Normal_distribution(mean, stdev):
 
 
 def arrival():
-    nada = 0
+    nada = None
 
 
 def departure():
-    nikske = 0
-
-for r in range(0.1,1):
+    nikske = None
