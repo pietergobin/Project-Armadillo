@@ -81,24 +81,33 @@ class Job:
 
 
 class Station:
+    """ this class has as attributes:
+
+                id              :a unique ID (int)
+                servers         :a dataframe that shows which servers in that station are busy
+                                and which job each server is processing (df)
+                queue           :this list contains all jobs that are in the queue of a certain station (list)
+
+        """
+
     def __init__(self, number_of_servers, id):
         self.id = id
         self.servers = pd.DataFrame(columns=["busy_time", "current_job"])
         for server in number_of_servers:
-            servers = self.servers
-            servers.append({"busy_time": 0, "current_job": None}, ignore_index=True)
+            self.servers = self.servers.append({"busy_time": 0, "current_job": None}, ignore_index=True)
         self.queue = list()  # contains the jobs who are in queue
 
+    #This method calculates the processing time and updates the total processed time of a job, station servers and event queue
     def update_departure_time(self, job):
         global event_queue, clock
         current_station = str(self.id)
         job_type = job.type
-        distr = Processing_Times_Prob[current_station].values(job_type - 1)
+        distr = Processing_Times_Prob[current_station].iloc[job_type - 1]
         mu = distr[0]
         sigma = math.sqrt(distr[1])
         process_time = normal_distributions(mu, sigma)
         job.process_time += process_time
-        self.servers.loc[self.servers.current_job == job.id, "busy_time"] += process_time
+        self.servers.loc[self.servers["current_job"] == job.id, "busy_time"] += process_time
         departure_time = process_time + clock
         event_queue = event_queue.append({"job ID": job.id, "time": departure_time, "type": 'departure'},
                                          ignore_index=True)
