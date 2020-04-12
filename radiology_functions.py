@@ -120,6 +120,9 @@ class Station:
         process_time = normal_distributions(mu, sigma)
         job.process_time += process_time
 
+
+
+
         departure_time = process_time + clock
         event_queue = event_queue.append({"job ID": job.id, "time": departure_time, "type": 'departure'},
                                          ignore_index=True)
