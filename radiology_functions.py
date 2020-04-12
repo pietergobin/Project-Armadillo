@@ -81,6 +81,17 @@ class Job:
         return len(self.route)
 
 
+class Server:
+    """
+    this class has attributes
+        busy_time       :total busy time of the server (float)
+        current_job     :the job currently being processed
+    """
+    def __init__(self):
+        self.busy_time = 0.0
+        self.current_job = None
+
+
 class Station:
     """ this class has as attributes:
 
@@ -93,12 +104,12 @@ class Station:
 
     def __init__(self, number_of_servers, id):
         self.id = id
-        self.servers = pd.DataFrame(columns=["busy_time", "current_job"])
-        for server in number_of_servers:
-            self.servers = self.servers.append({"busy_time": 0, "current_job": None}, ignore_index=True)
+        self.serverlist = {}
+        for s in range(0, number_of_servers):
+            self.serverlist.update({s:Server()})
         self.queue = list()  # contains the jobs who are in queue
 
-    #This method calculates the processing time and updates the total processed time of a job, station servers and event queue
+    # This method calculates the processing time and updates the total processed time of a job, station servers and event queue
     def update_departure_time(self, job):
         global event_queue, clock
         current_station = str(self.id)
@@ -108,7 +119,7 @@ class Station:
         sigma = math.sqrt(distr[1])
         process_time = normal_distributions(mu, sigma)
         job.process_time += process_time
-        self.servers.loc[self.servers["current_job"] == job.id, "busy_time"] += process_time
+
         departure_time = process_time + clock
         event_queue = event_queue.append({"job ID": job.id, "time": departure_time, "type": 'departure'},
                                          ignore_index=True)
