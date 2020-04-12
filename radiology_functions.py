@@ -43,6 +43,7 @@ class Job:
         global counter, clock
         counter += 1
         self.id = counter
+        self.patient = patient
         self.departure_time = float("inf")
         self.arrival_time = arrival_time
         self.process_time = 0
