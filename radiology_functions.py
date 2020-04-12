@@ -32,7 +32,7 @@ class Job:
             departure_time  :system departure time (float)
             arrival_time    :system arrival time (float)
             process type    :time spent being processed (not in queue)
-            location        :current location of the job (int for the relevant station)
+            location        :current location of the job (Station)
             :type           :type of job (X-ray, PET, CT, MRI as int: 1,2,3,4)
             route           :stations left to visit (tuple of int)
     """
@@ -41,7 +41,7 @@ class Job:
     # to determine whether the job comes from a patient (=True) or from another department (= False) and sets arrival
     # time of the job to the current clock
     def __init__(self, patient, arrival_time):
-        global counter, clock
+        global counter
         counter += 1
         self.id = counter
         self.patient = patient
@@ -88,6 +88,7 @@ class Server:
         busy_time       :total busy time of the server (float)
         current_job     :the job.id of the job currently being processed
     """
+
     def __init__(self):
         self.busy_time = 0.0
         self.current_job = None
@@ -109,29 +110,6 @@ class Station:
         for s in range(0, number_of_servers):
             self.serverlist.append(Server())
         self.queue = list()  # contains the jobs who are in queue
-
-
-    def update_departure_time(self, job):
-        """
-        this method creates a departure event and updates the server busy time based on the jobtype of the passed job
-        object
-        variable: job :the job for which a departure event needs to be created (Job)
-        """
-
-        global event_queue, clock
-        current_station = str(self.id)
-        job_type = job.type
-        distr = Processing_Times_Prob[current_station].iloc[job_type - 1]
-        mu = distr[0]
-        sigma = math.sqrt(distr[1])
-        process_time = normal_distributions(mu, sigma)
-        job.process_time += process_time
-        for server in self.serverlist:
-            if job.id == server.current_job:
-                server.busy_time += process_time
-        departure_time = process_time + clock
-        event_queue = event_queue.append({"job ID": job.id, "time": departure_time, "type": 'departure'},
-                                         ignore_index=True)
 
 
 # DEFINE DISTRIBUTIONS
@@ -170,7 +148,7 @@ def generate_arrival(patient):
     """
     global clock, event_queue
     if event_queue.empty:  # generate first arrivals
-        t_a1 = clock + exponential_distribution(1 / 0.25) * 60  # interarrival rate = 0.25; arrival rate = 1/0.25 = 4
+        t_a1 = clock + exponential_distribution(0.25) * 60  # interarrival rate = 0.25; arrival rate = 1/0.25 = 4
         t_a2 = clock + exponential_distribution(1) * 60  # interarrival rate = 1; arrival rate = 1/1 = 1
         newjob1 = Job(True, t_a1)
         newjob2 = Job(False, t_a2)
@@ -187,6 +165,33 @@ def generate_arrival(patient):
     event_queue = event_queue.append(
         {"job ID": newjob.id, "time": newjob.arrival_time,
          "type": 'arrival'}, ignore_index=True)
+
+
+def create_departure_event(job):
+    """
+    this method creates a departure event and updates the server busy time based on the jobtype of the passed job
+    object. It also applies the depart method for the given job.
+    variables:
+                job         :the job for which a departure event needs to be created (Job)
+
+    """
+
+    global event_queue, clock
+    station = job.location  # we use the location attribute to determine where the job currently is
+    current_station = str(station.id)
+    job_type = job.type
+    distr = Processing_Times_Prob[current_station].iloc[job_type - 1]
+    mu = distr[0]
+    sigma = math.sqrt(distr[1])
+    process_time = normal_distributions(mu, sigma)
+    job.process_time += process_time
+    job.depart()
+    for server in station.serverlist:
+        if job.id == server.current_job:
+            server.busy_time += process_time
+    departure_time = process_time + clock
+    event_queue = event_queue.append({"job ID": job.id, "time": departure_time, "type": 'departure'},
+                                     ignore_index=True)
 
 
 def get_next_event():
