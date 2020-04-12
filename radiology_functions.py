@@ -28,6 +28,7 @@ Efficiency_Improvement = pd.DataFrame({"Job_Type": [1, 2, 3, 4], "Current": [[25
 class Job:
     """ this class has as attributes:
             id              :a unique ID (int)
+            patient         :stores whether job arrived from a patient or from another department (boolean)
             departure_time  :system departure time (float)
             arrival_time    :system arrival time (float)
             process type    :time spent being processed (not in queue)
@@ -85,7 +86,7 @@ class Server:
     """
     this class has attributes
         busy_time       :total busy time of the server (float)
-        current_job     :the job currently being processed
+        current_job     :the job.id of the job currently being processed
     """
     def __init__(self):
         self.busy_time = 0.0
@@ -104,13 +105,19 @@ class Station:
 
     def __init__(self, number_of_servers, id):
         self.id = id
-        self.serverlist = {}
+        self.serverlist = []
         for s in range(0, number_of_servers):
-            self.serverlist.update({s:Server()})
+            self.serverlist.append(Server())
         self.queue = list()  # contains the jobs who are in queue
 
-    # This method calculates the processing time and updates the total processed time of a job, station servers and event queue
+
     def update_departure_time(self, job):
+        """
+        this method creates a departure event and updates the server busy time based on the jobtype of the passed job
+        object
+        variable: job :the job for which a departure event needs to be created (Job)
+        """
+
         global event_queue, clock
         current_station = str(self.id)
         job_type = job.type
@@ -119,7 +126,9 @@ class Station:
         sigma = math.sqrt(distr[1])
         process_time = normal_distributions(mu, sigma)
         job.process_time += process_time
-
+        for server in self.serverlist:
+            if job.id == server.current_job:
+                server.busy_time += process_time
         departure_time = process_time + clock
         event_queue = event_queue.append({"job ID": job.id, "time": departure_time, "type": 'departure'},
                                          ignore_index=True)
@@ -154,6 +163,11 @@ def normal_distributions(mean, stdev):
 
 
 def generate_arrival(patient):
+    """
+    this generates the next two arrivals if the event queue is empty, otherwise it generates the next arrival
+    according to whether the next arrival comes from a patient arriving or another department
+    variable:   patient: whether the next arrival is a patient or from another department (boolean)
+    """
     global clock, event_queue
     if event_queue.empty:  # generate first arrivals
         t_a1 = clock + exponential_distribution(1 / 0.25) * 60  # interarrival rate = 0.25; arrival rate = 1/0.25 = 4
