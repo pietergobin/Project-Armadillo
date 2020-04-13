@@ -9,9 +9,9 @@ number_of_runs = 1
 for run in number_of_runs:
 
     #set parameters = 0
-    f.clock = 0
-    f.clock = 0
-    f.event_queue = f.event_queue.iloc[0:0]
+    f.clock = 0 #werkt dit met OOP, of moeten we een functie schrijven die de clock update?
+    f.counter = 0 #idem als hierboven
+    f.event_queue = f.event_queue.iloc[0:0] #idem als hierboven (dit cleared de event_queue)
     #Create stations
     station_1 = f.Station(3,1)
     station_2 = f.Station(2, 2)
