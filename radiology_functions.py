@@ -8,7 +8,7 @@ import pandas as pd
 
 # DEFINE GLOBAL VARIABLES
 
-event_queue = pd.DataFrame({"job ID": [], "time": [], "type": []})
+event_queue = pd.DataFrame({"job": [], "time": [], "type": []})
 counter = 0
 clock = 0
 routes = {1: (3, 1, 2, 5), 2: (4, 1, 3), 3: (2, 5, 1, 4, 3), 4: (2, 4, 5)}
@@ -152,7 +152,7 @@ def generate_arrival(patient):
         t_a2 = clock + exponential_distribution(1) * 60  # interarrival rate = 1; arrival rate = 1/1 = 1
         newjob1 = Job(True, t_a1)
         newjob2 = Job(False, t_a2)
-        add = pd.DataFrame({"job ID": [newjob1.id, newjob2.id], "time": [newjob1.arrival_time, newjob2.arrival_time],
+        add = pd.DataFrame({"job": [newjob1.id, newjob2.id], "time": [newjob1.arrival_time, newjob2.arrival_time],
                             "type": ['arrival', 'arrival']})
         event_queue = event_queue.append(add, ignore_index=True)
         return
@@ -163,7 +163,7 @@ def generate_arrival(patient):
         t_a = clock + exponential_distribution(1) * 60
         newjob = Job(False, t_a)
     event_queue = event_queue.append(
-        {"job ID": newjob.id, "time": newjob.arrival_time,
+        {"job": newjob.id, "time": newjob.arrival_time,
          "type": 'arrival'}, ignore_index=True)
 
 
@@ -190,7 +190,7 @@ def create_departure_event(job):
         if job.id == server.current_job:
             server.busy_time += process_time
     departure_time = process_time + clock
-    event_queue = event_queue.append({"job ID": job.id, "time": departure_time, "type": 'departure'},
+    event_queue = event_queue.append({"job": job.id, "time": departure_time, "type": 'departure'},
                                      ignore_index=True)
 
 
