@@ -207,3 +207,10 @@ def update_clock():
 
 def departure():
     nikske = None
+
+
+def simulate(*kwargs):
+    """
+    this function implements all the functions above in order to correctly simulate the workings of a radiology
+    department
+    """
