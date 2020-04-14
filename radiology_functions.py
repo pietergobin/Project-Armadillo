@@ -9,7 +9,7 @@ import pandas as pd
 # DEFINE GLOBAL VARIABLES
 
 event_queue = pd.DataFrame({"job": [], "time": [], "type": []})
-finished_jobs = []
+output = pd.DataFrame()
 counter = 0
 clock = 0
 routes = {1: (3, 1, 2, 5), 2: (4, 1, 3), 3: (2, 5, 1, 4, 3), 4: (2, 4, 5)}
@@ -84,6 +84,12 @@ class Job:
 
     def update_location(self, station):
         self.location = station
+
+    def to_output(self):
+        global output
+        to_append = pd.Series({self.id, self.patient, self.type, self.arrival_time, self.departure_time,
+                               self.process_time})
+        output = output.append(to_append).reset_index()
 
 
 class Server:
@@ -185,7 +191,7 @@ def generate_arrival(patient):
          "type": 'arrival'}, ignore_index=True)
 
 
-def create_departure_event(job):
+def create_departure_event(job, upgrade):
     """
     this method creates a departure event and updates the server busy time based on the jobtype of the passed job
     object. It also applies the depart method for the given job.
@@ -198,7 +204,13 @@ def create_departure_event(job):
     station = job.location  # we use the location attribute to determine where the job currently is
     current_station = str(station.id)
     job_type = job.type
-    distr = Processing_Times_Prob[current_station].iloc[job_type - 1]
+    if station.id == 5 and upgrade != 0:
+        if upgrade == 1:
+            distr = Efficiency_Improvement['Upgrade'].iloc[job_type - 1]
+        else:
+            distr = Efficiency_Improvement['New_System'].iloc[job_type - 1]
+    else:
+        distr = Processing_Times_Prob[current_station].iloc[job_type - 1]
     mu = distr[0]
     sigma = math.sqrt(distr[1])
     process_time = normal_distributions(mu, sigma)
@@ -227,10 +239,15 @@ def departure():
     nikske = None
 
 
-def simulate(*kwargs):
+def simulate(servers_of_2=2, servers_of_5=1, upgrade= 0):
     """
     this function implements all the functions above in order to correctly simulate the workings of a radiology
     department
+    variables:
+        servers_of_2    : amount of servers for station 2
+        servers_of_5    : amount of servers for station 5
+        upgrade         : whether to use the upgraded system (1) or the new system (2) for station 5, default is current
+                          system (0)
     """
     global event_queue, finished_jobs
     global clock
@@ -244,10 +261,10 @@ def simulate(*kwargs):
 
         # Create stations
         station_1 = Station(3, 1)
-        station_2 = Station(2, 2)
+        station_2 = Station(servers_of_2, 2)
         station_3 = Station(4, 3)
         station_4 = Station(3, 4)
-        station_5 = Station(1, 5)
+        station_5 = Station(servers_of_5, 5)
         stations = [station_1, station_2, station_3, station_4, station_5]
 
         # generate first arrivals
@@ -289,14 +306,14 @@ def simulate(*kwargs):
                         # assign to server
                         server.current_job = current_job
                         # Create departure event
-                        create_departure_event(current_job)
+                        create_departure_event(current_job, upgrade)
 
                     else:
                         current_station.add_to_queue(current_job)
 
                 else:
                     # job is finished
-                    finished_jobs = finished_jobs.append(current_job)
+                    current_job.to_output()
                     print("finished")
 
                 # end criterium met?
