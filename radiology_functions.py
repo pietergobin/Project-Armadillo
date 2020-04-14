@@ -81,6 +81,10 @@ class Job:
     def stops_remaining(self):
         return len(self.route)
 
+    def update_location(self,station):
+        self.location = station
+
+
 
 class Server:
     """
@@ -110,6 +114,18 @@ class Station:
         for s in range(0, number_of_servers):
             self.serverlist.append(Server())
         self.queue = list()  # contains the jobs who are in queue
+
+    def is_free(self):
+        if len(self.queue) > 0:
+            return(False)
+        else:
+            for server in self.serverlist:
+                if server.current_job == None:
+                    return(True)
+            return(False)
+
+    def add_to_queue(self,job):
+        self.queue = self.queue.append(job)
 
 
 # DEFINE DISTRIBUTIONS
@@ -230,26 +246,85 @@ def simulate(*kwargs):
         station_3 = Station(4, 3)
         station_4 = Station(3, 4)
         station_5 = Station(1, 5)
+        stations = [station_1, station_2, station_3, station_4, station_5]
 
         # generate first arrivals
-        generate_arrival(True)#true or false makes no difference (it's the first arrival)
+        generate_arrival(True)  # true or false makes no difference (it's the first arrival)
 
-        # look in the event_queue what the first arrival event will be
-        current_time = event_queue["time"].min()
-        print(current_time)
+        while(clock < 1): #depending on stop criterium
 
-        clock = current_time
-        current_row = event_queue[event_queue["time"] == current_time]
 
-        current_job = (current_row["job"])
-        current_job = current_job
 
-        current_type = current_row["type"]
-        current_type = current_type
-        print(event_queue)
-        print(current_time)
-        print(current_job)
-        print(current_type)
+            # look in the event_queue what the next  event will be
+            event_queue = event_queue[event_queue["time"]>clock]
+            current_time = event_queue["time"].min()
+
+            #update clock
+            clock = current_time
+
+            #determine current job
+            current_row = event_queue[event_queue["time"] == current_time]
+
+            current_job = current_row["job"]
+            print(current_job)
+            print(type(current_job))
+            current_job = current_job[1] # DEZE CODE WERKT SOMS NIET OMDAT HET SOMS OP 0 STAAT (nog te fixen)
+            current_type = current_row["type"]
+            current_type = current_type[1] #werkt soms niet
+
+            #check event type
+            if current_type == "arrival":
+
+                #is there a not completed station?
+
+                if current_job.stops_remaining() > 0:
+
+                    #Current_job is not done yet!
+
+                    #What is the next station?
+                    current_station_id = current_job.next_stop() #je krijgt de id , mss stations in de dict steken?
+                    for station in stations:
+                        if(station.id == current_station_id):
+                            current_station = station
+
+                    #Is the next station free?
+
+                    if(current_station.is_free()):
+                        print("station is free")
+
+                        #update location of job
+                        current_job.update_location(current_station)
+
+                        #Create departure event
+                        create_departure_event(current_job)
+                        print("departure event done")
+                    else:
+                        print("Station is not free")
+                        current_station.add_to_queue(current_job)
+
+
+                else:
+                    #job is finised
+                    print("finished")
+
+                    #euhhh wuk doenwe hier?
+
+                #end criterium met?
+                #if(end_criterium_met()):
+                    #generate_arrival()
+                    #update/sort_event_queue()
+
+
+
+            else:
+                print("tis een departure")
+                #departure handling
+
+
+
+
+
+
 
 
 
