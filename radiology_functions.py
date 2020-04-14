@@ -295,6 +295,10 @@ def simulate(*kwargs):
 
                         #Create departure event
                         create_departure_event(current_job)
+
+                        ##TO DO: SERVERS updaten, momenteel heeft een job een location (station)
+                        #maar als je kijkt in de station => server zijn die nog steeds leeg!
+
                         print("departure event done")
                     else:
                         print("Station is not free")
