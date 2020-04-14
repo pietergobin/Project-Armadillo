@@ -87,8 +87,9 @@ class Job:
 
     def to_output(self):
         global output
-        to_append = pd.Series({self.id, self.patient, self.type, self.arrival_time, self.departure_time,
-                               self.process_time})
+        to_append = pd.DataFrame({"id":[self.id], "source patient":[self.patient], "type":[self.type],
+                                  "arrival time":[self.arrival_time], "departure time":[self.departure_time],
+                                    "process time":[self.process_time]})
         output = output.append(to_append).reset_index()
 
 
@@ -119,7 +120,7 @@ class Station:
         self.serverlist = []
         for s in range(0, number_of_servers):
             self.serverlist.append(Server())
-        self.queue = list()  # contains the jobs who are in queue
+        self.queue = []  # contains the jobs who are in queue
 
     def get_free_server(self):
         # this method returns a Server object if a server is free, otherwise it returns None
@@ -235,11 +236,30 @@ def update_clock():
     clock = event_queue.loc[0, "time"]
 
 
-def departure():
-    nikske = None
+def departure(job, upgrade):
+    global event_queue, clock
+
+    station = job.location
+    for server in station.serverlist:
+        if server.current_job == job:
+            if len(station.queue) > 0:
+                next_job = station.queue[0]
+                next_job.location = station
+                server.current_job = next_job
+                create_departure_event(next_job, upgrade)
+            else:
+                server.current_job = None
 
 
-def simulate(servers_of_2=2, servers_of_5=1, upgrade= 0):
+    if job.stops_remaining() > 0:
+        # generate future arrival event to relevant station
+        event_queue = event_queue.append({"job": job, "time": clock, "type": 'arrival'},
+                                         ignore_index=True)
+    else:
+        job.to_output()
+
+
+def simulate(number_of_runs = 10, servers_of_2=2, servers_of_5=1, upgrade=0):
     """
     this function implements all the functions above in order to correctly simulate the workings of a radiology
     department
@@ -252,11 +272,11 @@ def simulate(servers_of_2=2, servers_of_5=1, upgrade= 0):
     global event_queue, finished_jobs
     global clock
     global counter
-    number_of_runs = 1
     for run in range(0, number_of_runs):
         # set parameters = 0
         clock = 0
         counter = 0
+        stop = 11*60
         event_queue = event_queue.iloc[0:0]
 
         # Create stations
@@ -270,7 +290,8 @@ def simulate(servers_of_2=2, servers_of_5=1, upgrade= 0):
         # generate first arrivals
         generate_arrival(True)  # true or false makes no difference (it's the first arrival)
 
-        while (clock < 1):  # depending on stop criterium
+        while (clock < stop):  # depending on stop criterium
+
 
             # sort event queue to determine next event
             event_queue = event_queue.sort_values("time")
@@ -279,7 +300,8 @@ def simulate(servers_of_2=2, servers_of_5=1, upgrade= 0):
             current_row = event_queue.iloc[0]
             current_job = current_row.job
             current_type = current_row.type
-            # delete selected event from the queue
+            # delete selected event from the queue and update the clock
+            update_clock()
             event_queue = event_queue.iloc[1:]
 
             # check event type
@@ -327,6 +349,7 @@ def simulate(servers_of_2=2, servers_of_5=1, upgrade= 0):
             else:
                 print("tis een departure")
                 # departure handling
+                departure(current_job, upgrade)
 
 
 ## TESTING
