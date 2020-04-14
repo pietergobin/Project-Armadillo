@@ -232,7 +232,7 @@ def simulate(*kwargs):
         station_5 = Station(1, 5)
 
         # generate first arrivals
-        generate_arrival(True)#true of false makes no difference (it's the first arrival)
+        generate_arrival(True)#true or false makes no difference (it's the first arrival)
 
         # look in the event_queue what the first arrival event will be
         current_time = event_queue["time"].min()
