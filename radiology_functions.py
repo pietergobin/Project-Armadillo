@@ -152,7 +152,7 @@ def generate_arrival(patient):
         t_a2 = clock + exponential_distribution(1) * 60  # interarrival rate = 1; arrival rate = 1/1 = 1
         newjob1 = Job(True, t_a1)
         newjob2 = Job(False, t_a2)
-        add = pd.DataFrame({"job": [newjob1.id, newjob2.id], "time": [newjob1.arrival_time, newjob2.arrival_time],
+        add = pd.DataFrame({"job": [newjob1, newjob2], "time": [newjob1.arrival_time, newjob2.arrival_time],
                             "type": ['arrival', 'arrival']})
         event_queue = event_queue.append(add, ignore_index=True)
         return
@@ -163,7 +163,7 @@ def generate_arrival(patient):
         t_a = clock + exponential_distribution(1) * 60
         newjob = Job(False, t_a)
     event_queue = event_queue.append(
-        {"job": newjob.id, "time": newjob.arrival_time,
+        {"job": newjob, "time": newjob.arrival_time,
          "type": 'arrival'}, ignore_index=True)
 
 
@@ -214,3 +214,42 @@ def simulate(*kwargs):
     this function implements all the functions above in order to correctly simulate the workings of a radiology
     department
     """
+    global event_queue
+    global clock
+    global counter
+    number_of_runs = 1
+    for run in range(0,number_of_runs):
+        # set parameters = 0
+        clock = 0
+        counter = 0
+        event_queue = event_queue.iloc[0:0]
+
+        # Create stations
+        station_1 = Station(3, 1)
+        station_2 = Station(2, 2)
+        station_3 = Station(4, 3)
+        station_4 = Station(3, 4)
+        station_5 = Station(1, 5)
+
+        # generate first arrivals
+        generate_arrival(True)#true of false makes no difference (it's the first arrival)
+
+        # look in the event_queue what the first arrival event will be
+        current_time = event_queue["time"].min()
+        print(current_time)
+
+        clock = current_time
+        current_row = event_queue[event_queue["time"] == current_time]
+
+        current_job = (current_row["job"])
+        current_job = current_job
+
+        current_type = current_row["type"]
+        current_type = current_type
+        print(event_queue)
+        print(current_time)
+        print(current_job)
+        print(current_type)
+
+
+
