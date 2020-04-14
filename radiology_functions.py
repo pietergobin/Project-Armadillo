@@ -264,13 +264,11 @@ def simulate(*kwargs):
 
             #determine current job
             current_row = event_queue[event_queue["time"] == current_time]
-
-            current_job = current_row["job"]
-            print(current_job)
-            print(type(current_job))
-            current_job = current_job[1] # DEZE CODE WERKT SOMS NIET OMDAT HET SOMS OP 0 STAAT (nog te fixen)
-            current_type = current_row["type"]
-            current_type = current_type[1] #werkt soms niet
+            current_job = current_row.job
+            index = current_job.index
+            current_job = current_job[index[0]]
+            current_type = current_row.type
+            current_type = current_type[index[0]]
 
             #check event type
             if current_type == "arrival":
