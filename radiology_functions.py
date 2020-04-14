@@ -4,7 +4,7 @@ authors:
 
 import math
 from pathlib import Path
-
+from tqdm import tqdm, trange
 import numpy as np
 import pandas as pd
 
@@ -14,6 +14,8 @@ event_queue = pd.DataFrame({"job": [], "time": [], "type": []})
 output = pd.DataFrame({"id": [], "source patient": [], "type": [],
                        "arrival time": [], "departure time": [],
                        "process time": []})
+output = output.astype({"id": int, "source patient": int, "type": int, "arrival time": float,
+                        "departure time": float, "process time": float})
 counter = 0
 clock = 0
 routes = {1: (3, 1, 2, 5), 2: (4, 1, 3), 3: (2, 5, 1, 4, 3), 4: (2, 4, 5)}
@@ -240,6 +242,16 @@ def update_clock():
     clock = event_queue.loc[0, "time"]
 
 
+def reset_output():
+    global output
+    output = output.drop(output.index, inplace=True)
+    output = pd.DataFrame({"id": [], "source patient": [], "type": [],
+                           "arrival time": [], "departure time": [],
+                           "process time": []})
+    output = output.astype({"id": int, "source patient": int, "type": int, "arrival time": float,
+                            "departure time": float, "process time": float})
+
+
 def departure(job, upgrade):
     global event_queue, clock
 
@@ -277,7 +289,10 @@ def simulate(number_of_runs=10, servers_of_2=2, servers_of_5=1, upgrade=0):
     global event_queue, output
     global clock
     global counter
-    for run in range(0, number_of_runs):
+
+    reset_output()
+
+    for run in trange(number_of_runs):
         # set parameters = 0
         clock = 0
         counter = 0
@@ -307,6 +322,7 @@ def simulate(number_of_runs=10, servers_of_2=2, servers_of_5=1, upgrade=0):
             # delete selected event from the queue and update the clock
             update_clock()
             event_queue = event_queue.iloc[1:]
+
 
             # check event type
             if current_type == "arrival":
@@ -359,10 +375,10 @@ def simulate(number_of_runs=10, servers_of_2=2, servers_of_5=1, upgrade=0):
                 departure(current_job, upgrade)
 
         # write to csv after each run
-        """output_path = Path("/output")
-        output_name = output_path / ('test'+str(run)+ '.csv')"""
+        output_path = Path("output")
+        output_name = output_path / ('test' + str(run) + '.csv')
         output.reset_index()
-        output.to_csv("output/test" + str(run) + ".csv")
+        output.to_csv(output_name)
 
 
 ## TESTING
