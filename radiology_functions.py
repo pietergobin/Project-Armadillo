@@ -3,6 +3,8 @@ authors:
 '''
 
 import math
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 
@@ -87,9 +89,9 @@ class Job:
 
     def to_output(self):
         global output
-        to_append = pd.DataFrame({"id":[self.id], "source patient":[self.patient], "type":[self.type],
-                                  "arrival time":[self.arrival_time], "departure time":[self.departure_time],
-                                    "process time":[self.process_time]})
+        to_append = pd.DataFrame({"id": [self.id], "source patient": [self.patient], "type": [self.type],
+                                  "arrival time": [self.arrival_time], "departure time": [self.departure_time],
+                                  "process time": [self.process_time]})
         output = output.append(to_append).reset_index()
 
 
@@ -250,7 +252,6 @@ def departure(job, upgrade):
             else:
                 server.current_job = None
 
-
     if job.stops_remaining() > 0:
         # generate future arrival event to relevant station
         event_queue = event_queue.append({"job": job, "time": clock, "type": 'arrival'},
@@ -259,7 +260,7 @@ def departure(job, upgrade):
         job.to_output()
 
 
-def simulate(number_of_runs = 10, servers_of_2=2, servers_of_5=1, upgrade=0):
+def simulate(number_of_runs=10, servers_of_2=2, servers_of_5=1, upgrade=0):
     """
     this function implements all the functions above in order to correctly simulate the workings of a radiology
     department
@@ -269,14 +270,14 @@ def simulate(number_of_runs = 10, servers_of_2=2, servers_of_5=1, upgrade=0):
         upgrade         : whether to use the upgraded system (1) or the new system (2) for station 5, default is current
                           system (0)
     """
-    global event_queue, finished_jobs
+    global event_queue, output
     global clock
     global counter
     for run in range(0, number_of_runs):
         # set parameters = 0
         clock = 0
         counter = 0
-        stop = 11*60
+        stop = 11 * 60
         event_queue = event_queue.iloc[0:0]
 
         # Create stations
@@ -290,8 +291,7 @@ def simulate(number_of_runs = 10, servers_of_2=2, servers_of_5=1, upgrade=0):
         # generate first arrivals
         generate_arrival(True)  # true or false makes no difference (it's the first arrival)
 
-        while (clock < stop):  # depending on stop criterium
-
+        while clock < stop:  # depending on stop criterium
 
             # sort event queue to determine next event
             event_queue = event_queue.sort_values("time")
@@ -317,21 +317,22 @@ def simulate(number_of_runs = 10, servers_of_2=2, servers_of_5=1, upgrade=0):
                     current_station_id = current_job.next_stop()  # je krijgt de id , mss stations in de dict steken?
                     for station in stations:
                         if station.id == current_station_id:
-                            current_station = station
+                            # Is the next station free?
+                            current_server = station.get_free_server()
+                            if current_server is not None:
 
-                    # Is the next station free?
-                    server = current_station.get_free_server()
-                    if server is not None:
+                                # update location of job
+                                current_job.update_location(station)
+                                # assign to server
+                                current_server.current_job = current_job
+                                # Create departure event
+                                create_departure_event(current_job, upgrade)
 
-                        # update location of job
-                        current_job.update_location(current_station)
-                        # assign to server
-                        server.current_job = current_job
-                        # Create departure event
-                        create_departure_event(current_job, upgrade)
+                            else:
+                                station.add_to_queue(current_job)
+                        break
 
-                    else:
-                        current_station.add_to_queue(current_job)
+
 
                 else:
                     # job is finished
@@ -350,6 +351,11 @@ def simulate(number_of_runs = 10, servers_of_2=2, servers_of_5=1, upgrade=0):
                 print("tis een departure")
                 # departure handling
                 departure(current_job, upgrade)
+
+        #write to csv after each run
+        output_path = Path("/output")
+        output_name = output_path / ('test'+str(run)+ '.csv')
+        output.to_csv("output/test"+str(run)+".csv")
 
 
 ## TESTING
