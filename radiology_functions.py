@@ -9,6 +9,7 @@ import pandas as pd
 # DEFINE GLOBAL VARIABLES
 
 event_queue = pd.DataFrame({"job": [], "time": [], "type": []})
+finished_jobs = []
 counter = 0
 clock = 0
 routes = {1: (3, 1, 2, 5), 2: (4, 1, 3), 3: (2, 5, 1, 4, 3), 4: (2, 4, 5)}
@@ -45,7 +46,7 @@ class Job:
         counter += 1
         self.id = counter
         self.patient = patient
-        self.departure_time = float("inf")
+        self.departure_time = 0
         self.arrival_time = arrival_time
         self.process_time = 0
         self.location = None
@@ -81,16 +82,15 @@ class Job:
     def stops_remaining(self):
         return len(self.route)
 
-    def update_location(self,station):
+    def update_location(self, station):
         self.location = station
-
 
 
 class Server:
     """
     this class has attributes
         busy_time       :total busy time of the server (float)
-        current_job     :the job.id of the job currently being processed
+        current_job     :the job currently being processed
     """
 
     def __init__(self):
@@ -115,16 +115,18 @@ class Station:
             self.serverlist.append(Server())
         self.queue = list()  # contains the jobs who are in queue
 
-    def is_free(self):
+    def get_free_server(self):
+        # this method returns a Server object if a server is free, otherwise it returns None
+
         if len(self.queue) > 0:
-            return(False)
+            return None
         else:
             for server in self.serverlist:
                 if server.current_job == None:
-                    return(True)
-            return(False)
+                    return server
+            return None
 
-    def add_to_queue(self,job):
+    def add_to_queue(self, job):
         self.queue = self.queue.append(job)
 
 
@@ -203,10 +205,10 @@ def create_departure_event(job):
     job.process_time += process_time
     job.depart()
     for server in station.serverlist:
-        if job.id == server.current_job:
+        if job == server.current_job:
             server.busy_time += process_time
     departure_time = process_time + clock
-    event_queue = event_queue.append({"job": job.id, "time": departure_time, "type": 'departure'},
+    event_queue = event_queue.append({"job": job, "time": departure_time, "type": 'departure'},
                                      ignore_index=True)
 
 
@@ -230,11 +232,11 @@ def simulate(*kwargs):
     this function implements all the functions above in order to correctly simulate the workings of a radiology
     department
     """
-    global event_queue
+    global event_queue, finished_jobs
     global clock
     global counter
     number_of_runs = 1
-    for run in range(0,number_of_runs):
+    for run in range(0, number_of_runs):
         # set parameters = 0
         clock = 0
         counter = 0
@@ -251,82 +253,65 @@ def simulate(*kwargs):
         # generate first arrivals
         generate_arrival(True)  # true or false makes no difference (it's the first arrival)
 
-        while(clock < 1): #depending on stop criterium
+        while (clock < 1):  # depending on stop criterium
 
+            # sort event queue to determine next event
+            event_queue = event_queue.sort_values("time")
 
-
-            # look in the event_queue what the next  event will be
-            event_queue = event_queue[event_queue["time"]>clock]
-            current_time = event_queue["time"].min()
-
-            #update clock
-            clock = current_time
-
-            #determine current job
-            current_row = event_queue[event_queue["time"] == current_time]
+            # select event job and type
+            current_row = event_queue.iloc[0]
             current_job = current_row.job
-            index = current_job.index
-            current_job = current_job[index[0]]
             current_type = current_row.type
-            current_type = current_type[index[0]]
+            # delete selected event from the queue
+            event_queue = event_queue.iloc[1:]
 
-            #check event type
+            # check event type
             if current_type == "arrival":
 
-                #is there a not completed station?
+                # is there a not completed station?
 
                 if current_job.stops_remaining() > 0:
 
-                    #Current_job is not done yet!
+                    # Current_job is not done yet!
 
-                    #What is the next station?
-                    current_station_id = current_job.next_stop() #je krijgt de id , mss stations in de dict steken?
+                    # What is the next station?
+                    current_station_id = current_job.next_stop()  # je krijgt de id , mss stations in de dict steken?
                     for station in stations:
-                        if(station.id == current_station_id):
+                        if station.id == current_station_id:
                             current_station = station
 
-                    #Is the next station free?
+                    # Is the next station free?
+                    server = current_station.get_free_server()
+                    if server is not None:
 
-                    if(current_station.is_free()):
-                        print("station is free")
-
-                        #update location of job
+                        # update location of job
                         current_job.update_location(current_station)
-
-                        #Create departure event
+                        # assign to server
+                        server.current_job = current_job
+                        # Create departure event
                         create_departure_event(current_job)
 
-                        ##TO DO: SERVERS updaten, momenteel heeft een job een location (station)
-                        #maar als je kijkt in de station => server zijn die nog steeds leeg!
-
-                        print("departure event done")
                     else:
-                        print("Station is not free")
                         current_station.add_to_queue(current_job)
 
-
                 else:
-                    #job is finised
+                    # job is finished
+                    finished_jobs = finished_jobs.append(current_job)
                     print("finished")
 
-                    #euhhh wuk doenwe hier?
+                # end criterium met?
+                # if(end_criterium_met()):
+                # generate next arrival
+                generate_arrival(current_job.patient)
 
-                #end criterium met?
-                #if(end_criterium_met()):
-                    #generate_arrival()
-                    #update/sort_event_queue()
 
 
 
             else:
                 print("tis een departure")
-                #departure handling
+                # departure handling
 
 
+## TESTING
 
-
-
-
-
-
-
+simulate()
