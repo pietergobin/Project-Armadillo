@@ -353,9 +353,9 @@ def simulate(number_of_runs=10, servers_of_2=2, servers_of_5=1, upgrade=0):
                 departure(current_job, upgrade)
 
         #write to csv after each run
-        output_path = Path("/output")
+        """output_path = Path("/output")
         output_name = output_path / ('test'+str(run)+ '.csv')
-        output.to_csv("output/test"+str(run)+".csv")
+        output.to_csv("output/test"+str(run)+".csv")"""
 
 
 ## TESTING
