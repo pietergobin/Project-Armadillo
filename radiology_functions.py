@@ -11,7 +11,9 @@ import pandas as pd
 # DEFINE GLOBAL VARIABLES
 
 event_queue = pd.DataFrame({"job": [], "time": [], "type": []})
-output = pd.DataFrame()
+output = pd.DataFrame({"id": [], "source patient": [], "type": [],
+                       "arrival time": [], "departure time": [],
+                       "process time": []})
 counter = 0
 clock = 0
 routes = {1: (3, 1, 2, 5), 2: (4, 1, 3), 3: (2, 5, 1, 4, 3), 4: (2, 4, 5)}
@@ -92,7 +94,7 @@ class Job:
         to_append = pd.DataFrame({"id": [self.id], "source patient": [self.patient], "type": [self.type],
                                   "arrival time": [self.arrival_time], "departure time": [self.departure_time],
                                   "process time": [self.process_time]})
-        output = output.append(to_append).reset_index()
+        output = output.append(to_append)
 
 
 class Server:
@@ -136,7 +138,7 @@ class Station:
             return None
 
     def add_to_queue(self, job):
-        self.queue = self.queue.append(job)
+        self.queue.append(job)
 
 
 # DEFINE DISTRIBUTIONS
@@ -246,6 +248,7 @@ def departure(job, upgrade):
         if server.current_job == job:
             if len(station.queue) > 0:
                 next_job = station.queue[0]
+                station.queue = station.queue[1:]
                 next_job.location = station
                 server.current_job = next_job
                 create_departure_event(next_job, upgrade)
@@ -257,6 +260,7 @@ def departure(job, upgrade):
         event_queue = event_queue.append({"job": job, "time": clock, "type": 'arrival'},
                                          ignore_index=True)
     else:
+        job.departure_time = clock
         job.to_output()
 
 
@@ -330,12 +334,15 @@ def simulate(number_of_runs=10, servers_of_2=2, servers_of_5=1, upgrade=0):
 
                             else:
                                 station.add_to_queue(current_job)
+                        else:
+                            continue
                         break
 
 
 
                 else:
                     # job is finished
+                    current_job.departure_time = clock
                     current_job.to_output()
                     print("finished")
 
@@ -348,14 +355,14 @@ def simulate(number_of_runs=10, servers_of_2=2, servers_of_5=1, upgrade=0):
 
 
             else:
-                print("tis een departure")
                 # departure handling
                 departure(current_job, upgrade)
 
-        #write to csv after each run
+        # write to csv after each run
         """output_path = Path("/output")
-        output_name = output_path / ('test'+str(run)+ '.csv')
-        output.to_csv("output/test"+str(run)+".csv")"""
+        output_name = output_path / ('test'+str(run)+ '.csv')"""
+        output.reset_index()
+        output.to_csv("output/test" + str(run) + ".csv")
 
 
 ## TESTING
