@@ -4,9 +4,12 @@ authors:
 
 import math
 from pathlib import Path
+
+import numpy
 from tqdm import trange
 import numpy as np
 import pandas as pd
+import os
 
 # DEFINE GLOBAL VARIABLES
 
@@ -189,8 +192,8 @@ def generate_arrival(patient):
     """
     global clock, event_queue
     if event_queue.empty:  # generate first arrivals
-        t_a1 = clock + exponential_distribution(1 / (0.25 * 60))  # interarrival rate = 0.25; arrival rate = 1/0.25 = 4
-        t_a2 = clock + exponential_distribution(1 / 60)  # interarrival rate = 1; arrival rate = 1/1 = 1
+        t_a1 = clock + exponential_distribution(1/(0.25 * 60))  # interarrival rate = 0.25; arrival rate = 1/0.25 = 4
+        t_a2 = clock + exponential_distribution(1/60)  # interarrival rate = 1; arrival rate = 1/1 = 1
         newjob1 = Job(True, t_a1)
         newjob2 = Job(False, t_a2)
         add = pd.DataFrame({"job": [newjob1, newjob2], "time": [newjob1.arrival_time, newjob2.arrival_time],
@@ -198,7 +201,7 @@ def generate_arrival(patient):
         event_queue = event_queue.append(add, ignore_index=True)
         return
     elif patient:  # generate new patient arrival
-        t_a = clock + exponential_distribution(1 / 0.25 * 60)
+        t_a = clock + exponential_distribution(1/(0.25 * 60))
         newjob = Job(True, t_a)
     else:  # generate other arrival
         t_a = clock + exponential_distribution(1/60)
@@ -263,7 +266,7 @@ def reset_output():
 
 
 def departure(job, upgrade):
-    global event_queue, clock
+    global event_queue, clock, stations
 
     station = job.location
     for server in station.serverlist:
@@ -279,8 +282,25 @@ def departure(job, upgrade):
 
     if job.stops_remaining() > 0:
         # generate future arrival event to relevant station
-        event_queue = event_queue.append({"job": job, "time": clock, "type": 'arrival'},
-                                         ignore_index=True)
+        current_station_id = job.next_stop()
+        for station in stations:
+            if station.id == current_station_id:
+                # Is the next station free?
+                current_server = station.get_free_server()
+                if current_server is not None:
+
+                    # update location of job
+                    job.update_location(station)
+                    # assign to server
+                    current_server.current_job = job
+                    # Create departure event
+                    create_departure_event(job, upgrade)
+
+                else:
+                    station.add_to_queue(job)
+            else:
+                continue
+            break
     else:
         job.departure_time = clock
         job.to_output()
@@ -299,12 +319,22 @@ def simulate(dir_name, number_of_runs=10, servers_of_2=2, servers_of_5=1, upgrad
     global event_queue, job_output
     global clock
     global counter
+    CT_jobs = []
+    stop = (11 * 60) / 2
     output_path = Path("output/" + dir_name)
+    output_path_runs = output_path /'runs'
+    #create directories
+    try:
+        os.makedirs(output_path_runs, exist_ok=True)
+    except OSError as error:
+        print(error)
+
+
     for run in trange(number_of_runs):
         # set parameters = 0
         clock = 0
         counter = 0
-        stop = (11 * 60) / 2
+
         event_queue = event_queue.iloc[0:0]
 
         reset_output()
@@ -362,7 +392,7 @@ def simulate(dir_name, number_of_runs=10, servers_of_2=2, servers_of_5=1, upgrad
                         else:
                             continue
                         break
-
+                    generate_arrival(current_job.patient)
 
 
                 else:
@@ -372,7 +402,7 @@ def simulate(dir_name, number_of_runs=10, servers_of_2=2, servers_of_5=1, upgrad
                     print("finished")
 
                 # generate next arrival
-                generate_arrival(current_job.patient)
+
 
 
 
@@ -383,10 +413,13 @@ def simulate(dir_name, number_of_runs=10, servers_of_2=2, servers_of_5=1, upgrad
 
         # store cycle time of day in array
         job_output["cycle time"] = job_output["departure time"] - job_output["arrival time"]
-        #job_output.drop(["departure time", "arrival time"])
+        job_output = job_output.drop(["departure time", "arrival time"], axis = 1)
+
+        #store average cycle time of jobs
+        CT_jobs.append((job_output["cycle time"].mean()))
 
         # write to csv after each run
-        output_job_name = output_path / ('runs/job' + str(run) + '.csv')
+        output_job_name = output_path_runs / ('job' + str(run) + '.csv')
         job_output.reset_index()
         job_output.to_csv(output_job_name)
         # store server information in station_output
@@ -397,3 +430,11 @@ def simulate(dir_name, number_of_runs=10, servers_of_2=2, servers_of_5=1, upgrad
     output_station_name = output_path / 'station.csv'
     station_output.reset_index()
     station_output.to_csv(output_station_name)
+
+    #determine mean cycle time and utilisation
+    CT = numpy.mean(CT_jobs)
+    rho = station_output["busy time"].mean()/stop
+    obj_function = CT - 10*rho
+    with open(output_path+'performance.txt'):
+        print('Mean CT; Rho; Objective function value')
+        print(str(CT)+"; "+str(rho)+"; "+str(obj_function))
