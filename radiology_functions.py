@@ -412,6 +412,7 @@ def simulate(dir_name, number_of_iterations=10, servers_of_2=2, servers_of_5=1, 
             else:
                 # departure handling
                 departure(current_job, stations, upgrade)
+            #counter = len(job_output.index)
 
         if handle_remaining_jobs:
             # handle customers left in system
@@ -438,6 +439,7 @@ def simulate(dir_name, number_of_iterations=10, servers_of_2=2, servers_of_5=1, 
             output_job_name = output_path_iteration / ('job' + str(iteration) + '.csv')
             job_output.reset_index()
             job_output.to_csv(output_job_name)
+
         # store server information in station_output
         current_it_stations = pd.DataFrame()
         for station in stations:

@@ -3,5 +3,5 @@ authors: '''
 
 from radiology_functions import simulate
 
-simulate('experimental design', number_of_iterations=100)
+simulate('experimental design', number_of_iterations=10)
 
