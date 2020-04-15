@@ -285,7 +285,7 @@ def departure(job, upgrade):
         job.to_output()
 
 
-def simulate(number_of_runs=10, servers_of_2=2, servers_of_5=1, upgrade=0):
+def simulate(dir_name, number_of_runs=10, servers_of_2=2, servers_of_5=1, upgrade=0):
     """
     this function implements all the functions above in order to correctly simulate the workings of a radiology
     department
@@ -298,7 +298,7 @@ def simulate(number_of_runs=10, servers_of_2=2, servers_of_5=1, upgrade=0):
     global event_queue, job_output
     global clock
     global counter
-
+    output_path = Path("output/"+dir_name)
     for run in trange(number_of_runs):
         # set parameters = 0
         clock = 0
@@ -381,8 +381,7 @@ def simulate(number_of_runs=10, servers_of_2=2, servers_of_5=1, upgrade=0):
                 departure(current_job, upgrade)
 
         # write to csv after each run
-        output_path = Path("output")
-        output_job_name = output_path / ('test' + str(run) + '.csv')
+        output_job_name = output_path / ('runs/job' + str(run) + '.csv')
         job_output.reset_index()
         job_output.to_csv(output_job_name)
         # store server information in station_output
