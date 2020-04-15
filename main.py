@@ -5,5 +5,5 @@ from radiology_functions import simulate
 from datetime import datetime
 
 
-simulate()
+simulate(number_of_runs=1)
 

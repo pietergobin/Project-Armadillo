@@ -443,4 +443,4 @@ for i3 in range(0, L):
     for run in range(0, K):
         init()
         radiology_system()
-        output()
+        job_output()

@@ -11,11 +11,12 @@ import pandas as pd
 # DEFINE GLOBAL VARIABLES
 
 event_queue = pd.DataFrame({"job": [], "time": [], "type": []})
-output = pd.DataFrame({"id": [], "source patient": [], "type": [],
-                       "arrival time": [], "departure time": [],
-                       "process time": []})
-output = output.astype({"id": int, "source patient": int, "type": int, "arrival time": float,
-                        "departure time": float, "process time": float})
+job_output = pd.DataFrame({"id": [], "source patient": [], "type": [],
+                           "arrival time": [], "departure time": [],
+                           "process time": []})
+job_output = job_output.astype({"id": int, "source patient": int, "type": int, "arrival time": float,
+                                "departure time": float, "process time": float})
+station_output = pd.DataFrame()
 counter = 0
 clock = 0
 routes = {1: (3, 1, 2, 5), 2: (4, 1, 3), 3: (2, 5, 1, 4, 3), 4: (2, 4, 5)}
@@ -92,11 +93,11 @@ class Job:
         self.location = station
 
     def to_output(self):
-        global output
+        global job_output
         to_append = pd.DataFrame({"id": [self.id], "source patient": [self.patient], "type": [self.type],
                                   "arrival time": [self.arrival_time], "departure time": [self.departure_time],
                                   "process time": [self.process_time]})
-        output = output.append(to_append)
+        job_output = job_output.append(to_append)
 
 
 class Server:
@@ -142,6 +143,14 @@ class Station:
     def add_to_queue(self, job):
         self.queue.append(job)
 
+    def to_output(self):
+        global station_output
+        count = 0
+        for server in self.serverlist:
+            count += 1
+            station_output = station_output.append(
+                {"server": 'station'+str(self.id)+'server'+str(count), "busy time": server.busy_time}, ignore_index = True)
+
 
 # DEFINE DISTRIBUTIONS
 
@@ -179,7 +188,7 @@ def generate_arrival(patient):
     """
     global clock, event_queue
     if event_queue.empty:  # generate first arrivals
-        t_a1 = clock + exponential_distribution(1/0.25) * 60  # interarrival rate = 0.25; arrival rate = 1/0.25 = 4
+        t_a1 = clock + exponential_distribution(1 / 0.25) * 60  # interarrival rate = 0.25; arrival rate = 1/0.25 = 4
         t_a2 = clock + exponential_distribution(1) * 60  # interarrival rate = 1; arrival rate = 1/1 = 1
         newjob1 = Job(True, t_a1)
         newjob2 = Job(False, t_a2)
@@ -243,13 +252,13 @@ def update_clock():
 
 
 def reset_output():
-    global output
-    output = output.drop(output.index, inplace=True)
-    output = pd.DataFrame({"id": [], "source patient": [], "type": [],
-                           "arrival time": [], "departure time": [],
-                           "process time": []})
-    output = output.astype({"id": int, "source patient": int, "type": int, "arrival time": float,
-                            "departure time": float, "process time": float})
+    global job_output
+    job_output = job_output.drop(job_output.index, inplace=True)
+    job_output = pd.DataFrame({"id": [], "source patient": [], "type": [],
+                               "arrival time": [], "departure time": [],
+                               "process time": []})
+    job_output = job_output.astype({"id": int, "source patient": int, "type": int, "arrival time": float,
+                                    "departure time": float, "process time": float})
 
 
 def departure(job, upgrade):
@@ -286,17 +295,15 @@ def simulate(number_of_runs=10, servers_of_2=2, servers_of_5=1, upgrade=0):
         upgrade         : whether to use the upgraded system (1) or the new system (2) for station 5, default is current
                           system (0)
     """
-    global event_queue, output
+    global event_queue, job_output
     global clock
     global counter
-
-
 
     for run in trange(number_of_runs):
         # set parameters = 0
         clock = 0
         counter = 0
-        stop = 11 * 60
+        stop = (11 * 60)/2
         event_queue = event_queue.iloc[0:0]
 
         reset_output()
@@ -324,7 +331,6 @@ def simulate(number_of_runs=10, servers_of_2=2, servers_of_5=1, upgrade=0):
             # delete selected event from the queue and update the clock
             update_clock()
             event_queue = event_queue.iloc[1:]
-
 
             # check event type
             if current_type == "arrival":
@@ -376,6 +382,14 @@ def simulate(number_of_runs=10, servers_of_2=2, servers_of_5=1, upgrade=0):
 
         # write to csv after each run
         output_path = Path("output")
-        output_name = output_path / ('test' + str(run) + '.csv')
-        output.reset_index()
-        output.to_csv(output_name)
+        output_job_name = output_path / ('test' + str(run) + '.csv')
+        job_output.reset_index()
+        job_output.to_csv(output_job_name)
+        # store server information in station_output
+        for station in stations:
+            station.to_output()
+
+    # write server information to output
+    output_station_name = output_path / 'station.csv'
+    station_output.reset_index()
+    station_output.to_csv(output_station_name)
