@@ -149,7 +149,8 @@ class Station:
         for server in self.serverlist:
             count += 1
             station_output = station_output.append(
-                {"server": 'station'+str(self.id)+'server'+str(count), "busy time": server.busy_time}, ignore_index = True)
+                {"server": 'station' + str(self.id) + 'server' + str(count), "busy time": server.busy_time},
+                ignore_index=True)
 
 
 # DEFINE DISTRIBUTIONS
@@ -188,8 +189,8 @@ def generate_arrival(patient):
     """
     global clock, event_queue
     if event_queue.empty:  # generate first arrivals
-        t_a1 = clock + exponential_distribution(1 / 0.25) * 60  # interarrival rate = 0.25; arrival rate = 1/0.25 = 4
-        t_a2 = clock + exponential_distribution(1) * 60  # interarrival rate = 1; arrival rate = 1/1 = 1
+        t_a1 = clock + exponential_distribution(1 / (0.25 * 60))  # interarrival rate = 0.25; arrival rate = 1/0.25 = 4
+        t_a2 = clock + exponential_distribution(1 / 60)  # interarrival rate = 1; arrival rate = 1/1 = 1
         newjob1 = Job(True, t_a1)
         newjob2 = Job(False, t_a2)
         add = pd.DataFrame({"job": [newjob1, newjob2], "time": [newjob1.arrival_time, newjob2.arrival_time],
@@ -197,10 +198,10 @@ def generate_arrival(patient):
         event_queue = event_queue.append(add, ignore_index=True)
         return
     elif patient:  # generate new patient arrival
-        t_a = clock + exponential_distribution(1 / 0.25) * 60
+        t_a = clock + exponential_distribution(1 / 0.25 * 60)
         newjob = Job(True, t_a)
     else:  # generate other arrival
-        t_a = clock + exponential_distribution(1) * 60
+        t_a = clock + exponential_distribution(1/60)
         newjob = Job(False, t_a)
     event_queue = event_queue.append(
         {"job": newjob, "time": newjob.arrival_time,
@@ -298,12 +299,12 @@ def simulate(dir_name, number_of_runs=10, servers_of_2=2, servers_of_5=1, upgrad
     global event_queue, job_output
     global clock
     global counter
-    output_path = Path("output/"+dir_name)
+    output_path = Path("output/" + dir_name)
     for run in trange(number_of_runs):
         # set parameters = 0
         clock = 0
         counter = 0
-        stop = (11 * 60)/2
+        stop = (11 * 60) / 2
         event_queue = event_queue.iloc[0:0]
 
         reset_output()
@@ -379,6 +380,10 @@ def simulate(dir_name, number_of_runs=10, servers_of_2=2, servers_of_5=1, upgrad
             else:
                 # departure handling
                 departure(current_job, upgrade)
+
+        # store cycle time of day in array
+        job_output["cycle time"] = job_output["departure time"] - job_output["arrival time"]
+        #job_output.drop(["departure time", "arrival time"])
 
         # write to csv after each run
         output_job_name = output_path / ('runs/job' + str(run) + '.csv')
