@@ -446,7 +446,7 @@ def simulate(dir_name, number_of_iterations=10, servers_of_2=2, servers_of_5=1, 
             # determine mean cycle time and utilisation
         CT = numpy.mean(CT_jobs)
         rho = current_it_stations["busy time"].mean() / clock
-        obj_function = CT - 10 * rho
+        obj_function = CT / 60 - 10 * rho
         performance = performance.append({"cycle time": CT, "utilisation": rho, "objective function": obj_function},
                                          ignore_index=True)
 
