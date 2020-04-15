@@ -153,7 +153,7 @@ class Station:
         for server in self.serverlist:
             count += 1
             station_output = station_output.append(
-                {"server": 'station' + str(self.id) + 'server' + str(count), "busy time": server.busy_time},
+                {'station' + str(self.id) + 'server' + str(count):server.busy_time},
                 ignore_index=True)
 
 
@@ -312,10 +312,13 @@ def simulate(dir_name, number_of_runs=10, servers_of_2=2, servers_of_5=1, upgrad
     this function implements all the functions above in order to correctly simulate the workings of a radiology
     department
     variables:
-        servers_of_2    : amount of servers for station 2
-        servers_of_5    : amount of servers for station 5
-        upgrade         : whether to use the upgraded system (1) or the new system (2) for station 5, default is current
-                          system (0)
+        dir_name                :name of the directory in which to store the results (change this to a string with the
+                                 name of your experiment to test)
+        servers_of_2            :amount of servers for station 2
+        servers_of_5            :amount of servers for station 5
+        upgrade                 :whether to use the upgraded system (1) or the new system (2) for station 5, default is
+                                 current system (0)
+        handle_remaining_jobs   : whether to process customers left in system after stopping criterion is met (boolean)
     """
     global event_queue, job_output
     global clock
@@ -340,7 +343,7 @@ def simulate(dir_name, number_of_runs=10, servers_of_2=2, servers_of_5=1, upgrad
 
         reset_output()
 
-        # Create stations
+        # reset busy time
         station_1 = Station(3, 1)
         station_2 = Station(servers_of_2, 2)
         station_3 = Station(4, 3)
@@ -407,7 +410,7 @@ def simulate(dir_name, number_of_runs=10, servers_of_2=2, servers_of_5=1, upgrad
                 departure(current_job, stations, upgrade)
 
         if handle_remaining_jobs:
-            #handle customers left in system
+            # handle customers left in system
             event_queue = event_queue.loc[event_queue["type"] == 'departure']
             while len(event_queue)> 0:
                 event_queue = event_queue.sort_values(by=["time"])
@@ -423,8 +426,9 @@ def simulate(dir_name, number_of_runs=10, servers_of_2=2, servers_of_5=1, upgrad
         job_output["cycle time"] = job_output["departure time"] - job_output["arrival time"]
         job_output = job_output.drop(["departure time", "arrival time"], axis = 1)
 
-        #store average cycle time of jobs
+        # store average cycle time of jobs
         CT_jobs.append((job_output["cycle time"].mean()))
+
 
         # write to csv after each run
         output_job_name = output_path_runs / ('job' + str(run) + '.csv')
