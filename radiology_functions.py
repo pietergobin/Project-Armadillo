@@ -179,7 +179,7 @@ def generate_arrival(patient):
     """
     global clock, event_queue
     if event_queue.empty:  # generate first arrivals
-        t_a1 = clock + exponential_distribution(0.25) * 60  # interarrival rate = 0.25; arrival rate = 1/0.25 = 4
+        t_a1 = clock + exponential_distribution(1/0.25) * 60  # interarrival rate = 0.25; arrival rate = 1/0.25 = 4
         t_a2 = clock + exponential_distribution(1) * 60  # interarrival rate = 1; arrival rate = 1/1 = 1
         newjob1 = Job(True, t_a1)
         newjob2 = Job(False, t_a2)
@@ -381,6 +381,4 @@ def simulate(number_of_runs=10, servers_of_2=2, servers_of_5=1, upgrade=0):
         output.to_csv(output_name)
 
 
-## TESTING
 
-simulate()
