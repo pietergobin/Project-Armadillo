@@ -21,7 +21,6 @@ job_output = job_output.astype({"id": int, "source patient": int, "type": int, "
                                 "departure time": float, "process time": float})
 station_output = pd.DataFrame()
 counter = 0
-
 clock = 0
 routes = {1: (3, 1, 2, 5), 2: (4, 1, 3), 3: (2, 5, 1, 4, 3), 4: (2, 4, 5)}
 Processing_Times_Prob = pd.DataFrame({"Job_Type": [1, 2, 3, 4], "1": [[12, 2], [15, 2], [15, 3], [0, 0]]
@@ -114,6 +113,7 @@ class Server:
     def __init__(self):
         self.busy_time = 0.0
         self.current_job = None
+        self.total_busy_time = []
 
 
 class Station:
@@ -150,11 +150,14 @@ class Station:
     def to_output(self):
         global station_output
         count = 0
+        to_append = pd.DataFrame()
         for server in self.serverlist:
             count += 1
-            station_output = station_output.append(
-                {'station' + str(self.id) + 'server' + str(count):server.busy_time},
+            to_append = to_append.append(
+                {"server": 'station' + str(self.id) + 'server' + str(count), "busy time": server.busy_time},
                 ignore_index=True)
+            station_output = station_output.append(to_append, ignore_index=True)
+        return to_append
 
 
 # DEFINE DISTRIBUTIONS
@@ -193,8 +196,8 @@ def generate_arrival(patient):
     """
     global clock, event_queue
     if event_queue.empty:  # generate first arrivals
-        t_a1 = clock + exponential_distribution(1/(0.25 * 60))  # interarrival rate = 0.25; arrival rate = 1/0.25 = 4
-        t_a2 = clock + exponential_distribution(1/60)  # interarrival rate = 1; arrival rate = 1/1 = 1
+        t_a1 = clock + exponential_distribution(1 / (0.25 * 60))  # interarrival rate = 0.25; arrival rate = 1/0.25 = 4
+        t_a2 = clock + exponential_distribution(1 / 60)  # interarrival rate = 1; arrival rate = 1/1 = 1
         newjob1 = Job(True, t_a1)
         newjob2 = Job(False, t_a2)
         add = pd.DataFrame({"job": [newjob1, newjob2], "time": [newjob1.arrival_time, newjob2.arrival_time],
@@ -202,10 +205,10 @@ def generate_arrival(patient):
         event_queue = event_queue.append(add, ignore_index=True)
         return
     elif patient:  # generate new patient arrival
-        t_a = clock + exponential_distribution(1/(0.25 * 60))
+        t_a = clock + exponential_distribution(1 / (0.25 * 60))
         newjob = Job(True, t_a)
     else:  # generate other arrival
-        t_a = clock + exponential_distribution(1/60)
+        t_a = clock + exponential_distribution(1 / 60)
         newjob = Job(False, t_a)
     event_queue = event_queue.append(
         {"job": newjob, "time": newjob.arrival_time,
@@ -307,7 +310,8 @@ def departure(job, stations, upgrade):
         job.to_output()
 
 
-def simulate(dir_name, number_of_runs=10, servers_of_2=2, servers_of_5=1, upgrade=0, handle_remaining_jobs = True):
+def simulate(dir_name, number_of_iterations=10, servers_of_2=2, servers_of_5=1, upgrade=0, handle_remaining_jobs=True,
+             export_jobs=False):
     """
     this function implements all the functions above in order to correctly simulate the workings of a radiology
     department
@@ -320,25 +324,25 @@ def simulate(dir_name, number_of_runs=10, servers_of_2=2, servers_of_5=1, upgrad
                                  current system (0)
         handle_remaining_jobs   : whether to process customers left in system after stopping criterion is met (boolean)
     """
-    global event_queue, job_output
+    global event_queue, job_output, station_output
     global clock
     global counter
-    CT_jobs = []
+
+    performance = pd.DataFrame()
     stop = (11 * 60)
     output_path = Path("output/" + dir_name)
-    output_path_runs = output_path /'runs'
-    #create directories
+    output_path_iteration = output_path / 'iterations'
+    # create directories
     try:
-        os.makedirs(output_path_runs, exist_ok=True)
+        os.makedirs(output_path_iteration, exist_ok=True)
     except OSError as error:
         print(error)
 
-
-    for run in trange(number_of_runs):
+    for iteration in trange(number_of_iterations):
         # set parameters = 0
         clock = 0
         counter = 0
-
+        CT_jobs = []
         event_queue = event_queue.iloc[0:0]
 
         reset_output()
@@ -412,7 +416,7 @@ def simulate(dir_name, number_of_runs=10, servers_of_2=2, servers_of_5=1, upgrad
         if handle_remaining_jobs:
             # handle customers left in system
             event_queue = event_queue.loc[event_queue["type"] == 'departure']
-            while len(event_queue)> 0:
+            while len(event_queue) > 0:
                 event_queue = event_queue.sort_values(by=["time"])
                 # select event job and type
                 current_row = event_queue.iloc[0]
@@ -424,29 +428,35 @@ def simulate(dir_name, number_of_runs=10, servers_of_2=2, servers_of_5=1, upgrad
                 departure(current_job, stations, upgrade)
         # store cycle time of day in array
         job_output["cycle time"] = job_output["departure time"] - job_output["arrival time"]
-        job_output = job_output.drop(["departure time", "arrival time"], axis = 1)
+        job_output = job_output.drop(["departure time", "arrival time"], axis=1)
 
         # store average cycle time of jobs
         CT_jobs.append((job_output["cycle time"].mean()))
 
-
-        # write to csv after each run
-        output_job_name = output_path_runs / ('job' + str(run) + '.csv')
-        job_output.reset_index()
-        job_output.to_csv(output_job_name)
+        if export_jobs:
+            # write to csv after each iteration
+            output_job_name = output_path_iteration / ('job' + str(iteration) + '.csv')
+            job_output.reset_index()
+            job_output.to_csv(output_job_name)
         # store server information in station_output
+        current_it_stations = pd.DataFrame()
         for station in stations:
-            station.to_output()
+            current_it_stations = current_it_stations.append(station.to_output())
 
-    # write server information to output
+            # determine mean cycle time and utilisation
+        CT = numpy.mean(CT_jobs)
+        rho = current_it_stations["busy time"].mean() / clock
+        obj_function = CT - 10 * rho
+        performance = performance.append({"cycle time": CT, "utilisation": rho, "objective function": obj_function},
+                                         ignore_index=True)
+
+    # group output station by server
+    station_output = station_output.groupby("server").mean()
+    station_output["busy time"] = station_output["busy time"] / clock
+    # output server utilisation over all the iterations
     output_station_name = output_path / 'station.csv'
-    station_output.reset_index()
     station_output.to_csv(output_station_name)
 
-    # determine mean cycle time and utilisation
-    performance_file_name = output_path / 'performance.txt'
-    CT = numpy.mean(CT_jobs)
-    rho = station_output["busy time"].mean()/stop
-    obj_function = CT - 10*rho
-    with open(performance_file_name, 'w')as file:
-        file.write('Mean CT; Rho; Objective function value \n '+str(CT)+"; "+str(rho)+"; "+str(obj_function))
+    # output performance metrics per iteration
+    output_performance_name = output_path / 'performance.csv'
+    performance.to_csv(output_performance_name)
