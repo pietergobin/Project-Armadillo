@@ -4,7 +4,7 @@ authors:
 
 import math
 from pathlib import Path
-from tqdm import tqdm, trange
+from tqdm import trange
 import numpy as np
 import pandas as pd
 
@@ -290,7 +290,7 @@ def simulate(number_of_runs=10, servers_of_2=2, servers_of_5=1, upgrade=0):
     global clock
     global counter
 
-    reset_output()
+
 
     for run in trange(number_of_runs):
         # set parameters = 0
@@ -298,6 +298,8 @@ def simulate(number_of_runs=10, servers_of_2=2, servers_of_5=1, upgrade=0):
         counter = 0
         stop = 11 * 60
         event_queue = event_queue.iloc[0:0]
+
+        reset_output()
 
         # Create stations
         station_1 = Station(3, 1)
@@ -334,7 +336,7 @@ def simulate(number_of_runs=10, servers_of_2=2, servers_of_5=1, upgrade=0):
                     # Current_job is not done yet!
 
                     # What is the next station?
-                    current_station_id = current_job.next_stop()  # je krijgt de id , mss stations in de dict steken?
+                    current_station_id = current_job.next_stop()
                     for station in stations:
                         if station.id == current_station_id:
                             # Is the next station free?
@@ -362,8 +364,6 @@ def simulate(number_of_runs=10, servers_of_2=2, servers_of_5=1, upgrade=0):
                     current_job.to_output()
                     print("finished")
 
-                # end criterium met?
-                # if(end_criterium_met()):
                 # generate next arrival
                 generate_arrival(current_job.patient)
 
@@ -379,6 +379,3 @@ def simulate(number_of_runs=10, servers_of_2=2, servers_of_5=1, upgrade=0):
         output_name = output_path / ('test' + str(run) + '.csv')
         output.reset_index()
         output.to_csv(output_name)
-
-
-
