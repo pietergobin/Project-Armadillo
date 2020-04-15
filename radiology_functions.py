@@ -21,6 +21,7 @@ job_output = job_output.astype({"id": int, "source patient": int, "type": int, "
                                 "departure time": float, "process time": float})
 station_output = pd.DataFrame()
 counter = 0
+
 clock = 0
 routes = {1: (3, 1, 2, 5), 2: (4, 1, 3), 3: (2, 5, 1, 4, 3), 4: (2, 4, 5)}
 Processing_Times_Prob = pd.DataFrame({"Job_Type": [1, 2, 3, 4], "1": [[12, 2], [15, 2], [15, 3], [0, 0]]
@@ -265,8 +266,8 @@ def reset_output():
                                     "departure time": float, "process time": float})
 
 
-def departure(job, upgrade):
-    global event_queue, clock, stations
+def departure(job, stations, upgrade):
+    global event_queue, clock
 
     station = job.location
     for server in station.serverlist:
@@ -409,7 +410,7 @@ def simulate(dir_name, number_of_runs=10, servers_of_2=2, servers_of_5=1, upgrad
 
             else:
                 # departure handling
-                departure(current_job, upgrade)
+                departure(current_job, stations, upgrade)
 
         # store cycle time of day in array
         job_output["cycle time"] = job_output["departure time"] - job_output["arrival time"]
@@ -432,9 +433,9 @@ def simulate(dir_name, number_of_runs=10, servers_of_2=2, servers_of_5=1, upgrad
     station_output.to_csv(output_station_name)
 
     #determine mean cycle time and utilisation
+    performance_file_name = output_path / 'performance.txt'
     CT = numpy.mean(CT_jobs)
     rho = station_output["busy time"].mean()/stop
     obj_function = CT - 10*rho
-    with open(output_path+'performance.txt'):
-        print('Mean CT; Rho; Objective function value')
-        print(str(CT)+"; "+str(rho)+"; "+str(obj_function))
+    with open(performance_file_name, 'w')as file:
+        file.write('Mean CT; Rho; Objective function value \n '+str(CT)+"; "+str(rho)+"; "+str(obj_function))
