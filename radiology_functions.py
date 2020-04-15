@@ -3,13 +3,13 @@ authors:
 '''
 
 import math
+import os
 from pathlib import Path
 
 import numpy
-from tqdm import trange
 import numpy as np
 import pandas as pd
-import os
+from tqdm import trange
 
 # DEFINE GLOBAL VARIABLES
 
@@ -307,7 +307,7 @@ def departure(job, stations, upgrade):
         job.to_output()
 
 
-def simulate(dir_name, number_of_runs=10, servers_of_2=2, servers_of_5=1, upgrade=0):
+def simulate(dir_name, number_of_runs=10, servers_of_2=2, servers_of_5=1, upgrade=0, handle_remaining_jobs = True):
     """
     this function implements all the functions above in order to correctly simulate the workings of a radiology
     department
@@ -321,7 +321,7 @@ def simulate(dir_name, number_of_runs=10, servers_of_2=2, servers_of_5=1, upgrad
     global clock
     global counter
     CT_jobs = []
-    stop = (11 * 60) / 2
+    stop = (11 * 60)
     output_path = Path("output/" + dir_name)
     output_path_runs = output_path /'runs'
     #create directories
@@ -402,16 +402,23 @@ def simulate(dir_name, number_of_runs=10, servers_of_2=2, servers_of_5=1, upgrad
                     current_job.to_output()
                     print("finished")
 
-                # generate next arrival
-
-
-
-
-
             else:
                 # departure handling
                 departure(current_job, stations, upgrade)
 
+        if handle_remaining_jobs:
+            #handle customers left in system
+            event_queue = event_queue.loc[event_queue["type"] == 'departure']
+            while len(event_queue)> 0:
+                event_queue = event_queue.sort_values(by=["time"])
+                # select event job and type
+                current_row = event_queue.iloc[0]
+                current_job = current_row.job
+                current_type = current_row.type
+                # delete selected event from the queue and update the clock
+                update_clock()
+                event_queue = event_queue.iloc[1:]
+                departure(current_job, stations, upgrade)
         # store cycle time of day in array
         job_output["cycle time"] = job_output["departure time"] - job_output["arrival time"]
         job_output = job_output.drop(["departure time", "arrival time"], axis = 1)
@@ -432,7 +439,7 @@ def simulate(dir_name, number_of_runs=10, servers_of_2=2, servers_of_5=1, upgrad
     station_output.reset_index()
     station_output.to_csv(output_station_name)
 
-    #determine mean cycle time and utilisation
+    # determine mean cycle time and utilisation
     performance_file_name = output_path / 'performance.txt'
     CT = numpy.mean(CT_jobs)
     rho = station_output["busy time"].mean()/stop
