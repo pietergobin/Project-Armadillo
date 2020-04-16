@@ -358,7 +358,7 @@ def simulate(dir_name, number_of_iterations=10, servers_of_2=2, servers_of_5=1, 
         # generate first arrivals
         generate_arrival(True)  # true or false makes no difference (it's the first arrival)
 
-        while clock < stop:  # depending on stop criterium
+        while counter < 1000:  # depending on stop criterium
 
             # sort event queue to determine next event
             event_queue = event_queue.sort_values("time")
@@ -412,7 +412,7 @@ def simulate(dir_name, number_of_iterations=10, servers_of_2=2, servers_of_5=1, 
             else:
                 # departure handling
                 departure(current_job, stations, upgrade)
-            #counter = len(job_output.index)
+            counter = len(job_output.index)
 
         if handle_remaining_jobs:
             # handle customers left in system
