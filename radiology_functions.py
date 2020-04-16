@@ -310,7 +310,7 @@ def departure(job, stations, upgrade):
         job.to_output()
 
 
-def simulate(dir_name, number_of_iterations=10, servers_of_2=2, servers_of_5=1, upgrade=0, handle_remaining_jobs=True,
+def simulate(dir_name, number_of_iterations=10, , number_of_jobs = 1000, servers_of_2=2, servers_of_5=1, upgrade=0, handle_remaining_jobs=True,
              export_jobs=False):
     """
     this function implements all the functions above in order to correctly simulate the workings of a radiology
@@ -358,7 +358,7 @@ def simulate(dir_name, number_of_iterations=10, servers_of_2=2, servers_of_5=1, 
         # generate first arrivals
         generate_arrival(True)  # true or false makes no difference (it's the first arrival)
 
-        while counter < 1000:  # depending on stop criterium
+        while counter < number_of_jobs:  # depending on stop criterium
 
             # sort event queue to determine next event
             event_queue = event_queue.sort_values("time")
