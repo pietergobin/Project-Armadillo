@@ -21,6 +21,7 @@ job_output = job_output.astype({"id": int, "source patient": int, "type": int, "
                                 "departure time": float, "process time": float})
 station_output = pd.DataFrame()
 clock = 0
+counter = 0
 routes = {1: (3, 1, 2, 5), 2: (4, 1, 3), 3: (2, 5, 1, 4, 3), 4: (2, 4, 5)}
 Processing_Times_Prob = pd.DataFrame({"Job_Type": [1, 2, 3, 4], "1": [[12, 2], [15, 2], [15, 3], [0, 0]]
                                          , "2": [[20, 4], [0, 0], [21, 3], [18, 3]]
