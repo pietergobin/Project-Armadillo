@@ -373,7 +373,7 @@ def simulate(dir_name, number_of_iterations=10, servers_of_2=2, servers_of_5=1, 
 
             # check event type
             if current_type == "arrival":
-
+                counter +=1
                 # is there a not completed station?
 
                 if current_job.stops_remaining() > 0:
@@ -412,7 +412,6 @@ def simulate(dir_name, number_of_iterations=10, servers_of_2=2, servers_of_5=1, 
             else:
                 # departure handling
                 departure(current_job, stations, upgrade)
-            counter = len(job_output.index)
 
         if handle_remaining_jobs:
             # handle customers left in system
