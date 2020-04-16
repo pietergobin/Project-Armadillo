@@ -310,8 +310,8 @@ def departure(job, stations, upgrade):
         job.to_output()
 
 
-def simulate(dir_name, number_of_iterations=10, , number_of_jobs = 1000, servers_of_2=2, servers_of_5=1, upgrade=0, handle_remaining_jobs=True,
-             export_jobs=False):
+def simulate(dir_name, number_of_runs=10, number_of_jobs = 1000, servers_of_2=2, servers_of_5=1, upgrade=0, handle_remaining_jobs=True,
+             export_jobs=True):
     """
     this function implements all the functions above in order to correctly simulate the workings of a radiology
     department
@@ -331,14 +331,14 @@ def simulate(dir_name, number_of_iterations=10, , number_of_jobs = 1000, servers
     performance = pd.DataFrame()
     stop = (11 * 60)
     output_path = Path("output/" + dir_name)
-    output_path_iteration = output_path / 'iterations'
+    output_path_run = output_path / 'runs'
     # create directories
     try:
-        os.makedirs(output_path_iteration, exist_ok=True)
+        os.makedirs(output_path_run, exist_ok=True)
     except OSError as error:
         print(error)
 
-    for iteration in trange(number_of_iterations):
+    for run in trange(number_of_runs):
         # set parameters = 0
         clock = 0
         counter = 0
@@ -434,8 +434,8 @@ def simulate(dir_name, number_of_iterations=10, , number_of_jobs = 1000, servers
         CT_jobs.append((job_output["cycle time"].mean()))
 
         if export_jobs:
-            # write to csv after each iteration
-            output_job_name = output_path_iteration / ('job' + str(iteration) + '.csv')
+            # write to csv after each run
+            output_job_name = output_path_run / ('job' + str(run) + '.csv')
             job_output.reset_index()
             job_output.to_csv(output_job_name)
 
@@ -454,10 +454,10 @@ def simulate(dir_name, number_of_iterations=10, , number_of_jobs = 1000, servers
     # group output station by server
     station_output = station_output.groupby("server").mean()
     station_output["busy time"] = station_output["busy time"] / clock
-    # output server utilisation over all the iterations
+    # output server utilisation over all the runs
     output_station_name = output_path / 'station.csv'
     station_output.to_csv(output_station_name)
 
-    # output performance metrics per iteration
+    # output performance metrics per run
     output_performance_name = output_path / 'performance.csv'
     performance.to_csv(output_performance_name)
