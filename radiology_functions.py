@@ -20,7 +20,6 @@ job_output = pd.DataFrame({"id": [], "source patient": [], "type": [],
 job_output = job_output.astype({"id": int, "source patient": int, "type": int, "arrival time": float,
                                 "departure time": float, "process time": float})
 station_output = pd.DataFrame()
-counter = 0
 clock = 0
 routes = {1: (3, 1, 2, 5), 2: (4, 1, 3), 3: (2, 5, 1, 4, 3), 4: (2, 4, 5)}
 Processing_Times_Prob = pd.DataFrame({"Job_Type": [1, 2, 3, 4], "1": [[12, 2], [15, 2], [15, 3], [0, 0]]
@@ -310,7 +309,7 @@ def departure(job, stations, upgrade):
         job.to_output()
 
 
-def simulate(dir_name, number_of_runs=10, number_of_jobs = 1000, servers_of_2=2, servers_of_5=1, upgrade=0, handle_remaining_jobs=True,
+def simulate(dir_name, number_of_runs=10, number_of_jobs=1000, servers_of_2=2, servers_of_5=1, upgrade=0, handle_remaining_jobs=True,
              export_jobs=True):
     """
     this function implements all the functions above in order to correctly simulate the workings of a radiology
@@ -326,7 +325,6 @@ def simulate(dir_name, number_of_runs=10, number_of_jobs = 1000, servers_of_2=2,
     """
     global event_queue, job_output, station_output
     global clock
-    global counter
 
     performance = pd.DataFrame()
     stop = (11 * 60)
@@ -435,7 +433,7 @@ def simulate(dir_name, number_of_runs=10, number_of_jobs = 1000, servers_of_2=2,
 
         if export_jobs:
             # write to csv after each run
-            output_job_name = output_path_run / ('job' + str(run) + '.csv')
+            output_job_name = output_path_run / ('run' + str(run) + '.csv')
             job_output.reset_index()
             job_output.to_csv(output_job_name)
 
