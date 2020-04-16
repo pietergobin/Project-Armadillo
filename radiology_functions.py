@@ -21,7 +21,7 @@ job_output = job_output.astype({"id": int, "source patient": int, "type": int, "
                                 "departure time": float, "process time": float})
 station_output = pd.DataFrame()
 clock = 0
-counter = 0
+id_nr = 0
 routes = {1: (3, 1, 2, 5), 2: (4, 1, 3), 3: (2, 5, 1, 4, 3), 4: (2, 4, 5)}
 Processing_Times_Prob = pd.DataFrame({"Job_Type": [1, 2, 3, 4], "1": [[12, 2], [15, 2], [15, 3], [0, 0]]
                                          , "2": [[20, 4], [0, 0], [21, 3], [18, 3]]
@@ -52,9 +52,9 @@ class Job:
     # to determine whether the job comes from a patient (=True) or from another department (= False) and sets arrival
     # time of the job to the current clock
     def __init__(self, patient, arrival_time):
-        global counter
-        counter += 1
-        self.id = counter
+        global id_nr
+        id_nr += 1
+        self.id = id_nr
         self.patient = patient
         self.departure_time = 0
         self.arrival_time = arrival_time
@@ -186,6 +186,11 @@ def normal_distributions(mean, stdev):
 
 
 # DEFINE METHODS FOR PROGRAM FLOW
+
+def reset_job_id():
+    global id_nr
+    id_nr = 0
+
 
 
 def generate_arrival(patient):
@@ -340,6 +345,7 @@ def simulate(dir_name, number_of_runs=10, number_of_jobs=1000, servers_of_2=2, s
     for run in trange(number_of_runs):
         # set parameters = 0
         clock = 0
+        reset_job_id()
         counter = 0
         CT_jobs = []
         event_queue = event_queue.iloc[0:0]
