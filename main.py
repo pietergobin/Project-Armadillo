@@ -3,5 +3,5 @@ authors: '''
 
 from radiology_functions import simulate
 
-simulate('experimental design', number_of_runs=10, number_of_jobs=10)
+simulate('experimental design', servers_of_2=1, servers_of_5=1, upgrade=2)
 
