@@ -293,7 +293,7 @@ def get_next_event():
 
 def update_clock():
     global event_queue, clock
-    clock = event_queue.loc[0, "time"]
+    clock = event_queue.iat[0,1]
 
 
 def reset_output():
@@ -398,7 +398,7 @@ def simulate(dir_name, number_of_runs=10, number_of_jobs=1000, servers_of_2=2, s
         while counter < number_of_jobs:  # depending on stop criterium
 
             # sort event queue to determine next event
-            event_queue = event_queue.sort_values("time")
+            event_queue = event_queue.sort_values(by =["time"])
 
             # select event job and type
             current_row = event_queue.iloc[0]
