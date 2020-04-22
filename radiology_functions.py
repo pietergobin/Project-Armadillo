@@ -197,7 +197,7 @@ def normal_distributions(mean, stdev, job_type, current_station):
     # The polar method, p80.
 
     global norm
-    previous = norm.iat[job_type - 1, current_station]
+    previous = norm.iat[job_type - 1, current_station-1]
     if previous[0]:
         r1 = previous[1]
         r2 = previous[2]
@@ -205,7 +205,7 @@ def normal_distributions(mean, stdev, job_type, current_station):
 
         multiplier = math.sqrt(-2 * math.log(t) / t)
         x = r1 * multiplier * stdev + mean
-        norm.iat[job_type - 1, current_station] = [False, 0,0]
+        norm.iat[job_type - 1, current_station-1] = [False, 0,0]
         return x
     else:
         t = 0
@@ -216,7 +216,7 @@ def normal_distributions(mean, stdev, job_type, current_station):
 
         multiplier = math.sqrt(-2 * math.log(t) / t)
         x = r1 * multiplier * stdev + mean
-        norm.iat[job_type - 1, current_station] = [True, r1, r2]
+        norm.iat[job_type - 1, current_station-1] = [True, r1, r2]
         return x
 
 
@@ -293,7 +293,6 @@ def get_next_event():
 
 def update_clock():
     global event_queue, clock
-    event_queue = event_queue.sort_values(by=["time"], ignore_index=True)
     clock = event_queue.loc[0, "time"]
 
 
