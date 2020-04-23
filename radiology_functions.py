@@ -348,7 +348,6 @@ def departure(job, stations, upgrade, number_of_departures):
         job.to_output()
     return(number_of_departures)
 
-
 def simulate(dir_name, number_of_runs=10, number_of_jobs=1000, servers_of_2=2, servers_of_5=1, upgrade=0,
              handle_remaining_jobs=False,
              export_jobs=True):

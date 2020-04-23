@@ -1,13 +1,12 @@
-import pandas as pd
-import numpy as np
-import matplotlib as plt
 
-df = pd.read_csv("")
+import radiology_functions as f
+j=0
+waarde2 = 100
 
+while j <1000000:
+    j+=1
+    waarde = f.normal_distributions(10,1)
+    if(waarde < waarde2):
+        waarde2 = waarde
 
-
-plt.figure(fig_size=(4,3))
-plt.plot(df["run"],df["objective function"],label = "Objective_Function")
-plt.title("Running Averages per day")
-plt.legend(loc = "upper right")
-plt.show()
+print(waarde2)
