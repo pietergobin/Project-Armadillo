@@ -306,7 +306,7 @@ def reset_output():
                                     "departure time": float, "process time": float})
 
 
-def departure(job, stations, upgrade):
+def departure(job, stations, upgrade, number_of_departures):
     global event_queue, clock
 
     station = job.location
@@ -343,12 +343,14 @@ def departure(job, stations, upgrade):
                 continue
             break
     else:
+        number_of_departures += 1
         job.departure_time = clock
         job.to_output()
+    return(number_of_departures)
 
 
 def simulate(dir_name, number_of_runs=10, number_of_jobs=1000, servers_of_2=2, servers_of_5=1, upgrade=0,
-             handle_remaining_jobs=True,
+             handle_remaining_jobs=False,
              export_jobs=True):
     """
     this function implements all the functions above in order to correctly simulate the workings of a radiology
@@ -378,10 +380,9 @@ def simulate(dir_name, number_of_runs=10, number_of_jobs=1000, servers_of_2=2, s
         # set parameters = 0
         clock = 0
         reset_job_id()
-        counter = 0
         CT_jobs = []
         event_queue = event_queue.iloc[0:0]
-
+        number_of_departures = 0
         reset_output()
 
         # reset busy time
@@ -395,7 +396,7 @@ def simulate(dir_name, number_of_runs=10, number_of_jobs=1000, servers_of_2=2, s
         # generate first arrivals
         generate_arrival(True)  # true or false makes no difference (it's the first arrival)
 
-        while counter < number_of_jobs:  # depending on stop criterium
+        while number_of_departures < number_of_jobs:  # depending on stop criterium
 
             # sort event queue to determine next event
             event_queue = event_queue.sort_values(by =["time"])
@@ -410,7 +411,6 @@ def simulate(dir_name, number_of_runs=10, number_of_jobs=1000, servers_of_2=2, s
 
             # check event type
             if current_type == "arrival":
-                counter += 1
                 # is there a not completed station?
 
                 if current_job.stops_remaining() > 0:
@@ -440,15 +440,10 @@ def simulate(dir_name, number_of_runs=10, number_of_jobs=1000, servers_of_2=2, s
                     generate_arrival(current_job.patient)
 
 
-                else:
-                    # job is finished
-                    current_job.departure_time = clock
-                    current_job.to_output()
-                    print("finished")
 
             else:
                 # departure handling
-                departure(current_job, stations, upgrade)
+                number_of_departures = departure(current_job, stations, upgrade,number_of_departures)
 
         if handle_remaining_jobs:
             # handle customers left in system
@@ -458,11 +453,10 @@ def simulate(dir_name, number_of_runs=10, number_of_jobs=1000, servers_of_2=2, s
                 # select event job and type
                 current_row = event_queue.iloc[0]
                 current_job = current_row.job
-                current_type = current_row.type
                 # delete selected event from the queue and update the clock
                 update_clock()
                 event_queue = event_queue.iloc[1:]
-                departure(current_job, stations, upgrade)
+                departure(current_job, stations, upgrade, number_of_departures)
         # store cycle time of day in array
         job_output["cycle time"] = job_output["departure time"] - job_output["arrival time"]
         job_output = job_output.drop(["departure time", "arrival time"], axis=1)
