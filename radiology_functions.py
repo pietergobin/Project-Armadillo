@@ -2,6 +2,7 @@
 authors:
 '''
 
+
 import math
 import os
 from pathlib import Path
@@ -29,13 +30,13 @@ norm = pd.DataFrame({1: [[False, 0, 0], [False, 0, 0], [False, 0, 0], [False, 0,
                         , 4: [[False, 0, 0], [False, 0, 0], [False, 0, 0], [False, 0, 0]]
                         , 5: [[False, 0, 0], [False, 0, 0], [False, 0, 0], [False, 0, 0]]})
 routes = {1: (3, 1, 2, 5), 2: (4, 1, 3), 3: (2, 5, 1, 4, 3), 4: (2, 4, 5)}
-Processing_Times_Prob = pd.DataFrame({"Job_Type": [1, 2, 3, 4], "1": [[12, 2], [15, 2], [15, 3], [0, 0]]
+Processing_Times_Prob = pd.DataFrame({"1": [[12, 2], [15, 2], [15, 3], [0, 0]]
                                          , "2": [[20, 4], [0, 0], [21, 3], [18, 3]]
                                          , "3": [[16, 4], [14, 2], [10, 1], [0, 0]]
                                          , "4": [[0, 0], [20, 3], [24, 4], [13, 2]]
                                          , "5": [[25, 5], [0, 0], [20, 3], [25, 5]]})
 
-Efficiency_Improvement = pd.DataFrame({"Job_Type": [1, 2, 3, 4], "Current": [[25, 5], [0, 0], [20, 3], [25, 5]]
+Efficiency_Improvement = pd.DataFrame({"Current": [[25, 5], [0, 0], [20, 3], [25, 5]]
                                           , "Upgrade": [[20, 5], [0, 0], [20, 3], [20, 5]]
                                           , "New_System": [[17, 4], [0, 0], [15, 3], [16, 4]]})
 
@@ -119,7 +120,6 @@ class Server:
     def __init__(self):
         self.busy_time = 0.0
         self.current_job = None
-        self.total_busy_time = []
 
 
 class Station:
@@ -234,7 +234,7 @@ def generate_arrival(patient):
     variable:   patient: whether the next arrival is a patient or from another department (boolean)
     """
     global clock, event_queue
-    if event_queue.empty:  # generate first arrivals
+    if clock == 0:  # generate first arrivals
         t_a1 = clock + exponential_distribution(1 / (0.25 * 60))  # interarrival rate = 0.25; arrival rate = 1/0.25 = 4
         t_a2 = clock + exponential_distribution(1 / 60)  # interarrival rate = 1; arrival rate = 1/1 = 1
         newjob1 = Job(True, t_a1)
@@ -272,7 +272,7 @@ def create_departure_event(job, upgrade):
         else:
             distr = Efficiency_Improvement['New_System'].iloc[job_type - 1]
     else:
-        distr = Processing_Times_Prob.loc[job_type - 1].iloc[current_station]
+        distr = Processing_Times_Prob.iat[job_type-1, current_station-1]
     mu = distr[0]
     sigma = math.sqrt(distr[1])
     process_time = normal_distributions(mu, sigma, job_type, current_station)
@@ -407,6 +407,10 @@ def simulate(dir_name, number_of_runs=10, number_of_jobs=1000, servers_of_2=2, s
             # delete selected event from the queue and update the clock
             update_clock()
             event_queue = event_queue.iloc[1:]
+            #DEBUG
+            if current_job.id == 311:
+                print(None)
+
 
             # check event type
             if current_type == "arrival":
