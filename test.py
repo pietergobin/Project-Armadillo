@@ -1,10 +1,12 @@
 
-from radiology_functions import simulate
+import radiology_functions as f
+j=0
+waarde2 = 100
 
-for i in range(1,5):
-    for j in range(1,5):
-        for k in range(0,2):
-            simulate('experimental design', servers_of_2=i, servers_of_5=j, upgrade=k)
-            #De output wordt nu overschreven, als we de output aanpassen kunnen we dit 1 keer runnen voor alle
-            #mogelijke combinaties voor de comparison design.
+while j <1000000:
+    j+=1
+    waarde = f.normal_distributions(10,1)
+    if(waarde < waarde2):
+        waarde2 = waarde
 
+print(waarde2)

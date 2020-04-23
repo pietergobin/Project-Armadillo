@@ -422,7 +422,7 @@ def simulate(dir_name, number_of_runs=10, number_of_jobs=1000, servers_of_2=2, s
                 # delete selected event from the queue and update the clock
                 update_clock()
                 event_queue = event_queue.iloc[1:]
-                departure(current_job, stations, upgrade)
+                departure(current_job, stations, upgrade, number_of_departures)
         # store cycle time of day in array
         job_output["cycle time"] = job_output["departure time"] - job_output["arrival time"]
         job_output = job_output.drop(["departure time", "arrival time"], axis=1)
