@@ -274,7 +274,7 @@ def reset_output():
                                     "departure time": float, "process time": float})
 
 
-def departure(job, stations, upgrade):
+def departure(job, stations, upgrade, number_of_departures):
     global event_queue, clock
 
     station = job.location
@@ -311,9 +311,10 @@ def departure(job, stations, upgrade):
                 continue
             break
     else:
+        number_of_departures += 1
         job.departure_time = clock
         job.to_output()
-
+    return(number_of_departures)
 
 def simulate(dir_name, number_of_runs=10, number_of_jobs=1000, servers_of_2=2, servers_of_5=1, upgrade=0, handle_remaining_jobs=True,
              export_jobs=True):
@@ -333,7 +334,6 @@ def simulate(dir_name, number_of_runs=10, number_of_jobs=1000, servers_of_2=2, s
     global clock
 
     performance = pd.DataFrame()
-    stop = (11 * 60)
     output_path = Path("output/" + dir_name)
     output_path_run = output_path / 'runs'
     # create directories
@@ -406,16 +406,10 @@ def simulate(dir_name, number_of_runs=10, number_of_jobs=1000, servers_of_2=2, s
                     generate_arrival(current_job.patient)
 
 
-                else:
-                    # job is finished
-                    current_job.departure_time = clock
-                    current_job.to_output()
-                    print("finished")
 
             else:
                 # departure handling
-                number_of_departures +=1
-                departure(current_job, stations, upgrade)
+                number_of_departures = departure(current_job, stations, upgrade,number_of_departures)
 
         if handle_remaining_jobs:
             # handle customers left in system
