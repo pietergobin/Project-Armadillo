@@ -408,9 +408,6 @@ def simulate(dir_name, number_of_runs=10, number_of_jobs=1000, servers_of_2=2, s
             update_clock()
             event_queue = event_queue.iloc[1:]
             #DEBUG
-            if current_job.id == 311:
-                print(None)
-
 
             # check event type
             if current_type == "arrival":
@@ -475,12 +472,23 @@ def simulate(dir_name, number_of_runs=10, number_of_jobs=1000, servers_of_2=2, s
 
         # store server information in station_output
         current_it_stations = pd.DataFrame()
+
         for station in stations:
             current_it_stations = current_it_stations.append(station.to_output())
 
             # determine mean cycle time and utilisation
         CT = numpy.mean(CT_jobs)
-        rho = current_it_stations["busy time"].mean() / clock
+
+        # calculate rho
+        rho = []
+        for station in stations:
+            time = 0
+            for server in station.serverlist:
+                time += (server.busy_time / clock)
+            rho.append(time/len(station.serverlist))
+        rho = np.mean(rho)
+
+        #calculate objective function
         obj_function = CT / 60 - 10 * rho
         performance = performance.append({"cycle time": CT, "utilisation": rho, "objective function": obj_function},
                                          ignore_index=True)
