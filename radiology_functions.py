@@ -346,10 +346,9 @@ def simulate(dir_name, number_of_runs=10, number_of_jobs=1000, servers_of_2=2, s
         # set parameters = 0
         clock = 0
         reset_job_id()
-        counter = 0
         CT_jobs = []
         event_queue = event_queue.iloc[0:0]
-
+        number_of_departures = 0
         reset_output()
 
         # reset busy time
@@ -363,7 +362,7 @@ def simulate(dir_name, number_of_runs=10, number_of_jobs=1000, servers_of_2=2, s
         # generate first arrivals
         generate_arrival(True)  # true or false makes no difference (it's the first arrival)
 
-        while counter < number_of_jobs:  # depending on stop criterium
+        while number_of_departures < number_of_jobs:  # depending on stop criterium
 
             # sort event queue to determine next event
             event_queue = event_queue.sort_values("time")
@@ -378,7 +377,6 @@ def simulate(dir_name, number_of_runs=10, number_of_jobs=1000, servers_of_2=2, s
 
             # check event type
             if current_type == "arrival":
-                counter +=1
                 # is there a not completed station?
 
                 if current_job.stops_remaining() > 0:
@@ -416,6 +414,7 @@ def simulate(dir_name, number_of_runs=10, number_of_jobs=1000, servers_of_2=2, s
 
             else:
                 # departure handling
+                number_of_departures +=1
                 departure(current_job, stations, upgrade)
 
         if handle_remaining_jobs:
@@ -426,7 +425,6 @@ def simulate(dir_name, number_of_runs=10, number_of_jobs=1000, servers_of_2=2, s
                 # select event job and type
                 current_row = event_queue.iloc[0]
                 current_job = current_row.job
-                current_type = current_row.type
                 # delete selected event from the queue and update the clock
                 update_clock()
                 event_queue = event_queue.iloc[1:]

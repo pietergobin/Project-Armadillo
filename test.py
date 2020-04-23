@@ -1,13 +1,10 @@
-import pandas as pd
-import numpy as np
-import matplotlib as plt
 
-df = pd.read_csv("")
+from radiology_functions import simulate
 
+for i in range(1,5):
+    for j in range(1,5):
+        for k in range(0,2):
+            simulate('experimental design', servers_of_2=i, servers_of_5=j, upgrade=k)
+            #De output wordt nu overschreven, als we de output aanpassen kunnen we dit 1 keer runnen voor alle
+            #mogelijke combinaties voor de comparison design.
 
-
-plt.figure(fig_size=(4,3))
-plt.plot(df["run"],df["objective function"],label = "Objective_Function")
-plt.title("Running Averages per day")
-plt.legend(loc = "upper right")
-plt.show()
