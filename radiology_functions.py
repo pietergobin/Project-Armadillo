@@ -350,7 +350,7 @@ def departure(job, stations, upgrade, number_of_departures):
 
 def simulate(dir_name, number_of_runs=10, number_of_jobs=1000, servers_of_2=2, servers_of_5=1, upgrade=0,
              handle_remaining_jobs=False,
-             export_jobs=True):
+             export_jobs=False):
     """
     this function implements all the functions above in order to correctly simulate the workings of a radiology
     department
