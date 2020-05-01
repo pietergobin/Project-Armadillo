@@ -3,15 +3,8 @@ authors: '''
 
 from radiology_functions import simulate
 
-#zet u naam hier dan hebben we mooi overzicht
-name = "(4,8) "
-min =4
-max =8
-simulate(name+'screening_scenario---',servers_of_2=min, servers_of_5=min, upgrade=0,number_of_runs=32, number_of_jobs=1000)
-simulate(name+'screening_scenario+--',servers_of_2=max, servers_of_5=min, upgrade=0,number_of_runs=32, number_of_jobs=1000)
-simulate(name+'screening_scenario-+-',servers_of_2=min, servers_of_5=max, upgrade=0,number_of_runs=32, number_of_jobs=1000)
-simulate(name+'screening_scenario++-',servers_of_2=max, servers_of_5=max, upgrade=0,number_of_runs=32, number_of_jobs=1000)
-simulate(name+'screening_scenario--+',servers_of_2=min, servers_of_5=min, upgrade=2,number_of_runs=32, number_of_jobs=1000)
-simulate(name+'screening_scenario+-+',servers_of_2=max, servers_of_5=min, upgrade=2,number_of_runs=32, number_of_jobs=1000)
-simulate(name+'screening_scenario-++',servers_of_2=min, servers_of_5=max, upgrade=2,number_of_runs=32, number_of_jobs=1000)
-simulate(name+'screening_scenario+++',servers_of_2=max, servers_of_5=max, upgrade=2,number_of_runs=32, number_of_jobs=1000)
+name = "(3,3) "
+min, max = 3,3
+simulate(name+' comparative upgrade',servers_of_2=min, servers_of_5=min, upgrade=1,number_of_runs=32, number_of_jobs=1000)
+simulate(name+'comparative new',servers_of_2=max, servers_of_5=min, upgrade=2,number_of_runs=32, number_of_jobs=1000)
+
