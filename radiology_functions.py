@@ -376,6 +376,7 @@ def simulate(dir_name, number_of_runs=10, number_of_jobs=1000, servers_of_2=2, s
         print(error)
 
     for run in trange(number_of_runs):
+        np.random.seed(run)
         # set parameters = 0
         clock = 0
         reset_job_id()

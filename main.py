@@ -3,8 +3,6 @@ authors: '''
 
 from radiology_functions import simulate
 
-name = "(3,3) "
-min, max = 3,3
-simulate(name+' comparative upgrade',servers_of_2=min, servers_of_5=max, upgrade=1,number_of_runs=32, number_of_jobs=1000)
-simulate(name+'comparative new',servers_of_2=min, servers_of_5=max, upgrade=2,number_of_runs=32, number_of_jobs=1000)
+
+simulate('Common_Random_Numbers_Test_2',servers_of_2=2, servers_of_5=1, upgrade=0,number_of_runs=2, number_of_jobs=1000)
 
