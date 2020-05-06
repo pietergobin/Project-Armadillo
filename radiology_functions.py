@@ -376,7 +376,6 @@ def simulate(dir_name, number_of_runs=1, number_of_jobs=1000, servers_of_2=2, se
         print(error)
 
     for run in trange(number_of_runs):
-        np.random.seed(run)
         # set parameters = 0
         clock = 0
         reset_job_id()
@@ -408,7 +407,6 @@ def simulate(dir_name, number_of_runs=1, number_of_jobs=1000, servers_of_2=2, se
             # delete selected event from the queue and update the clock
             update_clock()
             event_queue = event_queue.iloc[1:]
-            #DEBUG
 
             # check event type
             if current_type == "arrival":
